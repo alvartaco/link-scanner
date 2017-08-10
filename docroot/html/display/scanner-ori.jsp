@@ -2,34 +2,18 @@
 
 <%
 String contentType = ParamUtil.getString(request, "content-type", "web-content");
-String originalUrl = ParamUtil.getString(request, "original_url", "");
-String newUrl = ParamUtil.getString(request, "new_url", "");
-//boolean scanLinks = ParamUtil.getBoolean(request, "scan-links", true);
-//boolean scanImages = ParamUtil.getBoolean(request, "scan-images", false);
+
+boolean scanLinks = ParamUtil.getBoolean(request, "scan-links", true);
+boolean scanImages = ParamUtil.getBoolean(request, "scan-images", false);
 boolean useBrowserAgent = ParamUtil.getBoolean(request, "use-browser-agent", true);
 
 String userAgent = "null";
 if (useBrowserAgent)
 	userAgent = request.getHeader("User-Agent");
 
-String scanType = LinkScannerConstants.linkImagesLabel(true, true);
+String scanType = LinkScannerConstants.linkImagesLabel(scanLinks, scanImages);
 
-List<ContentLinks> _contentLinksList = LinkScannerUtil.getContentLinks(contentType, scopeGroupId, liferayPortletRequest, liferayPortletResponse, themeDisplay, true, true);
-List<ContentLinks> contentLinksList = new ArrayList<ContentLinks>();
-
-for (ContentLinks _contentLinks : _contentLinksList) {
-	int links = _contentLinks.getLinksSize();
-	for (String link : _contentLinks.getLinks()) {
-		if (!link.toLowerCase().endsWith(originalUrl.toLowerCase())) {
-			links--;
-		}
-	}
-	if (links > 0) {
-		contentLinksList.add(_contentLinks);
-	}
-}
-
-contentLinksList = LinkScannerUtil.replaceContentLinks(contentType, scopeGroupId, liferayPortletRequest, liferayPortletResponse, themeDisplay, true, true, originalUrl, newUrl, contentLinksList);
+List<ContentLinks> contentLinksList = LinkScannerUtil.getContentLinks(contentType, scopeGroupId, liferayPortletRequest, liferayPortletResponse, themeDisplay, scanLinks, scanImages);
 
 int scanCount = 0;
 
@@ -97,40 +81,39 @@ boolean rowAlt = true;
 	for (ContentLinks contentLinks : contentLinksList) {
 
 		rowAlt = !rowAlt;
-		
-		%>
-		<tr class="link-scanner-row-content results-row <%= (rowAlt?"portlet-section-alternate alt":"portlet-section-body") %>">
-			<td class="table-cell align-left col-1 first valign-middle" colspan="1" headers="<portlet:namespace/>SearchContainer_col-result">&nbsp;</td>
-			<td class="table-cell align-left col-2 last valign-middle" colspan="1" headers="<portlet:namespace/>SearchContainer_col-title-link">
-			
-			<%
-			if (contentType.equals("rss-portlet-subscriptions") || 
-				permissionChecker.hasPermission(
-				scopeGroupId, contentLinks.getClassName(),
-				contentLinks.getClassPK(), "UPDATE")) {
-	
-				String editUrl = contentType.equals("rss-portlet-subscriptions") ? contentLinks.getContentEditLink() : 
-					"javascript:Liferay.Util.openWindow({id: '" + renderResponse.getNamespace() + "editAsset', " + 
-					"title: '" + LanguageUtil.format(pageContext, "edit-x", HtmlUtil.escape(contentLinks.getContentTitle())) + "', " + 
-					"uri:'" + HtmlUtil.escapeURL(contentLinks.getContentEditLink()) + "'});";
-			%>
-					<liferay-ui:icon
-						image="edit"
-						label="<%= true %>"
-						message="<%= contentLinks.getContentTitle() %>"
-						target='<%= contentType.equals("rss-portlet-subscriptions") ? "_blank" : null %>'
-						url="<%= editUrl %>"
-					/>
-			<%
-			} else {
-			%>
-					<%= HtmlUtil.escape(contentLinks.getContentTitle()) %>
-			<%
-			}
-			%>
-			</td>
-		</tr>
-		<%
+%>
+					<tr class="link-scanner-row-content results-row <%= (rowAlt?"portlet-section-alternate alt":"portlet-section-body") %>">
+						<td class="table-cell align-left col-1 first valign-middle" colspan="1" headers="<portlet:namespace/>SearchContainer_col-result">&nbsp;</td>
+						<td class="table-cell align-left col-2 last valign-middle" colspan="1" headers="<portlet:namespace/>SearchContainer_col-title-link">
+<%
+		if (contentType.equals("rss-portlet-subscriptions") || 
+			permissionChecker.hasPermission(
+			scopeGroupId, contentLinks.getClassName(),
+			contentLinks.getClassPK(), "UPDATE")) {
+
+			String editUrl = contentType.equals("rss-portlet-subscriptions") ? contentLinks.getContentEditLink() : 
+				"javascript:Liferay.Util.openWindow({id: '" + renderResponse.getNamespace() + "editAsset', " + 
+				"title: '" + LanguageUtil.format(pageContext, "edit-x", HtmlUtil.escape(contentLinks.getContentTitle())) + "', " + 
+				"uri:'" + HtmlUtil.escapeURL(contentLinks.getContentEditLink()) + "'});";
+%>
+							<liferay-ui:icon
+								image="edit"
+								label="<%= true %>"
+								message="<%= contentLinks.getContentTitle() %>"
+								target='<%= contentType.equals("rss-portlet-subscriptions") ? "_blank" : null %>'
+								url="<%= editUrl %>"
+							/>
+<%
+		}
+		else {
+%>
+							<%= HtmlUtil.escape(contentLinks.getContentTitle()) %>
+<%
+		}
+%>
+						</td>
+					</tr>
+<%
 		for (String link : contentLinks.getLinks()) {
 
 			rowAlt = !rowAlt;
@@ -144,7 +127,7 @@ boolean rowAlt = true;
 					
 				}
 			}
-			%>
+%>
 					<tr class="link-scanner-row-link results-row <%= (rowAlt?"portlet-section-alternate alt":"portlet-section-body") %>">
 						<td class="table-cell align-left col-1 first valign-middle" colspan="1" headers="<portlet:namespace/>SearchContainer_col-result">
 							<div class="link-scanner-result link-scanner-unchecked" title="" data-link="<%= link %>" data-isportal="<%= LinkScannerUtil.isPortalLink(link, themeDisplay) %>"></div>
@@ -153,7 +136,7 @@ boolean rowAlt = true;
 							<a href="<%= link %>" target="_blank" class="link-scanner-link"><%= HtmlUtil.escape(linkShort) %></a>
 						</td>
 					</tr>
-			<%
+<%
 		}
 	}
 %>
@@ -191,7 +174,6 @@ boolean rowAlt = true;
 									node.removeClass('link-scanner-error');
 									node.addClass('link-scanner-success');
 									node.attr('title','AJAX Success');
-									//node.ancestor('tr').setStyle('display', 'none');
 								}
 							}
 						}
@@ -221,7 +203,6 @@ boolean rowAlt = true;
 											node.removeClass('link-scanner-error');
 											node.removeClass('link-scanner-redirect');
 											node.addClass('link-scanner-success');
-											//node.ancestor('tr').setStyle('display', 'none');
 										} else if (response[0] >= 300 && response[0] < 400) {
 											node.removeClass('link-scanner-unchecked');
 											node.removeClass('link-scanner-error');
@@ -288,7 +269,7 @@ boolean rowAlt = true;
 					value: progressBarCount
 				}
 			).render();
-			<portlet:namespace />scanLinks();
+	<portlet:namespace />scanLinks();
 		}
 	);
 </aui:script>

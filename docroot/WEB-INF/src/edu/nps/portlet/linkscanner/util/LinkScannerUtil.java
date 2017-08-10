@@ -18,6 +18,9 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.kernel.xml.Document;
+import com.liferay.portal.kernel.xml.Element;
+import com.liferay.portal.kernel.xml.SAXReaderUtil;
 import com.liferay.portal.model.Layout;
 import com.liferay.portal.model.LayoutTypePortlet;
 import com.liferay.portal.model.Portlet;
@@ -32,6 +35,7 @@ import com.liferay.portlet.blogs.model.BlogsEntry;
 import com.liferay.portlet.blogs.service.BlogsEntryLocalServiceUtil;
 import com.liferay.portlet.bookmarks.model.BookmarksEntry;
 import com.liferay.portlet.bookmarks.service.BookmarksEntryLocalServiceUtil;
+import com.liferay.portlet.dynamicdatamapping.util.DDMXMLUtil;
 import com.liferay.portlet.journal.model.JournalArticle;
 import com.liferay.portlet.journalcontent.util.JournalContentUtil;
 import com.liferay.portlet.journal.service.JournalArticleLocalServiceUtil;
@@ -131,6 +135,25 @@ public class LinkScannerUtil {
 		}
 	}
 
+	public static List<ContentLinks> replaceContentLinks(
+			String contentType, long groupId, 
+			LiferayPortletRequest liferayPortletRequest,
+			LiferayPortletResponse liferayPortletResponse,
+			ThemeDisplay themeDisplay, 
+			boolean getLinks,
+			boolean getImages,
+			String originalUrl,
+			String newUrl,
+			List<ContentLinks> contentLinksList)
+		throws Exception {
+
+		if (contentType.equals("web-content")) {
+			return replaceWebContentLinks(groupId, liferayPortletRequest, liferayPortletResponse, themeDisplay, getLinks, getImages, originalUrl, newUrl, contentLinksList);
+		} else {
+			return null;
+		}
+	}	
+	
 	public static List<ContentLinks> getBlogLinks(
 			long groupId, 
 			LiferayPortletRequest liferayPortletRequest,
@@ -379,6 +402,7 @@ public class LinkScannerUtil {
 		return contentLinksList;
 	}
 
+	@SuppressWarnings("unchecked")
 	public static List<ContentLinks> getRSSPortletLinks(
 			long groupId, 
 			LiferayPortletRequest liferayPortletRequest,
@@ -478,6 +502,10 @@ public class LinkScannerUtil {
 				continue;
 			}
 
+			if (journalArticle.getStatus() == 8) {
+				continue;
+			}			
+			
 			if (JournalArticleLocalServiceUtil.isLatestVersion(journalArticle.getGroupId(), journalArticle.getArticleId(), journalArticle.getVersion())) {
 
 				String content = JournalContentUtil.getContent(groupId, journalArticle.getArticleId(), null, null, themeDisplay.getLanguageId(), themeDisplay);
@@ -516,6 +544,149 @@ public class LinkScannerUtil {
 		return contentLinksList;
 	}
 
+	public static List<ContentLinks> replaceWebContentLinks(
+			long groupId, 
+			LiferayPortletRequest liferayPortletRequest,
+			LiferayPortletResponse liferayPortletResponse,
+			ThemeDisplay themeDisplay, 
+			boolean getLinks,
+			boolean getImages,
+			String originalUrl,
+			String newUrl,
+			List<ContentLinks> _contentLinksList)
+			throws Exception {
+
+			_log.debug("repalceWebContentLinks for groupId " + String.valueOf(groupId));
+
+			List<ContentLinks> contentLinksList = new ArrayList<ContentLinks>();
+
+			for (ContentLinks _contentLinks : _contentLinksList) {
+				//JournalArticle journalArticle = JournalArticleLocalServiceUtil.getArticle(groupId, _contentLinks.getClassName(), (new Long(_contentLinks.getClassPK())).longValue());
+				JournalArticle journalArticle = JournalArticleLocalServiceUtil.getLatestArticle(groupId, _contentLinks.getClassPK());
+				if (JournalArticleLocalServiceUtil.isLatestVersion(journalArticle.getGroupId(), journalArticle.getArticleId(), journalArticle.getVersion())) {
+					String content = JournalContentUtil.getContent(groupId, journalArticle.getArticleId(), null, null, themeDisplay.getLanguageId(), themeDisplay);
+					if (content != null) {
+						content = content.replaceFirst(originalUrl, newUrl);
+						
+						String result = null;
+						Element rootElement = SAXReaderUtil.createElement("root");
+						Document contentDoc = SAXReaderUtil.createDocument(rootElement);
+						Element contentElement = SAXReaderUtil.createElement("static-content");
+						rootElement.add(contentElement);
+						contentElement.addText(content);
+						try {
+							result = DDMXMLUtil.formatXML(contentDoc);
+						} catch (Exception e) {            
+							e.printStackTrace();
+						}        
+						
+						//JournalArticleLocalServiceUtil.updateContent(groupId, journalArticle.getArticleId(), journalArticle.getVersion(), result);
+					}
+				}
+				
+				PortletURL portletURL = liferayPortletResponse.createLiferayPortletURL(
+						PortalUtil.getControlPanelPlid(liferayPortletRequest), 
+						PortletKeys.JOURNAL,
+						PortletRequest.RENDER_PHASE);		
+				
+				portletURL.setWindowState(LiferayWindowState.POP_UP);
+				portletURL.setParameter("struts_action", "/journal/edit_article");
+				
+				String content = JournalContentUtil.getContent(groupId, journalArticle.getArticleId(), null, null, themeDisplay.getLanguageId(), themeDisplay);
+
+				if (content != null) {
+
+					List<String> links = parseLinks(content, getLinks, getImages);
+
+					if (links.size() > 0) {
+
+						portletURL.setParameter("groupId", String.valueOf(journalArticle.getGroupId()));
+						portletURL.setParameter("articleId", journalArticle.getArticleId());
+						portletURL.setParameter("version", String.valueOf(journalArticle.getVersion()));
+
+						ContentLinks contentLinks = new ContentLinks();
+						contentLinks.setClassName(journalArticle.getModelClassName());
+						contentLinks.setClassPK(journalArticle.getArticleId());
+						contentLinks.setContentTitle(journalArticle.getTitle(themeDisplay.getLocale()));
+						contentLinks.setContentEditLink(portletURL.toString());
+						contentLinks.setModifiedDate(journalArticle.getModifiedDate());
+						contentLinks.setStatus(journalArticle.getStatus());
+						
+						_log.debug("Extracting links from journal article " + journalArticle.getArticleId() + " - " + journalArticle.getTitle());
+						
+						for (String link : links) {
+
+							contentLinks.addLink(link);
+						}
+						
+						contentLinksList.add(contentLinks);
+					}
+				}				
+				
+				
+				
+				
+			}
+			
+			/*
+			List<JournalArticle> journalArticleList = JournalArticleLocalServiceUtil.getArticles(groupId);
+
+			PortletURL portletURL = liferayPortletResponse.createLiferayPortletURL(
+					PortalUtil.getControlPanelPlid(liferayPortletRequest), 
+					PortletKeys.JOURNAL,
+					PortletRequest.RENDER_PHASE);
+
+			portletURL.setWindowState(LiferayWindowState.POP_UP);
+			portletURL.setParameter("struts_action", "/journal/edit_article");
+
+			for (JournalArticle journalArticle : journalArticleList) {
+
+				if (!hasPermissionView(groupId, journalArticle.getModelClassName(), journalArticle.getPrimaryKey(), themeDisplay)) {
+					continue;
+				}
+
+				if (journalArticle.getStatus() == 8) {
+					continue;
+				}			
+				
+				if (JournalArticleLocalServiceUtil.isLatestVersion(journalArticle.getGroupId(), journalArticle.getArticleId(), journalArticle.getVersion())) {
+
+					String content = JournalContentUtil.getContent(groupId, journalArticle.getArticleId(), null, null, themeDisplay.getLanguageId(), themeDisplay);
+
+					if (content != null) {
+
+						List<String> links = parseLinks(content, getLinks, getImages);
+
+						if (links.size() > 0) {
+
+							portletURL.setParameter("groupId", String.valueOf(journalArticle.getGroupId()));
+							portletURL.setParameter("articleId", journalArticle.getArticleId());
+							portletURL.setParameter("version", String.valueOf(journalArticle.getVersion()));
+
+							ContentLinks contentLinks = new ContentLinks();
+							contentLinks.setClassName(journalArticle.getModelClassName());
+							contentLinks.setClassPK(journalArticle.getArticleId());
+							contentLinks.setContentTitle(journalArticle.getTitle(themeDisplay.getLocale()));
+							contentLinks.setContentEditLink(portletURL.toString());
+							contentLinks.setModifiedDate(journalArticle.getModifiedDate());
+							contentLinks.setStatus(journalArticle.getStatus());
+							
+							_log.debug("Extracting links from journal article " + journalArticle.getArticleId() + " - " + journalArticle.getTitle());
+							
+							for (String link : links) {
+
+								contentLinks.addLink(link);
+							}
+							
+							contentLinksList.add(contentLinks);
+						}
+					}
+				}
+			}
+			*/
+			return contentLinksList;
+		}
+	
 	public static List<ContentLinks> getWikiContentLinks(
 			long groupId, 
 			LiferayPortletRequest liferayPortletRequest,
