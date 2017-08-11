@@ -26,7 +26,9 @@ page import="com.liferay.portal.kernel.workflow.WorkflowConstants" %><%@
 page import="com.liferay.portal.util.PortalUtil" %><%@
 page import="com.liferay.portal.util.PortletKeys" %><%@
 page import="com.liferay.portlet.PortalPreferences" %><%@
-page import="com.liferay.portlet.PortletPreferencesFactoryUtil" %>
+page import="com.liferay.portlet.PortletPreferencesFactoryUtil" %><%@
+page import="com.liferay.portal.GroupFriendlyURLException" %><%@
+page import="com.liferay.portal.LayoutFriendlyURLException" %>
 
 <%@ page import="edu.nps.portlet.linkscanner.util.ContentLinks" %><%@
 page import="edu.nps.portlet.linkscanner.util.LinkScannerConstants" %><%@

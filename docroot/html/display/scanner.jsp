@@ -6,7 +6,15 @@ String originalUrl = ParamUtil.getString(request, "original_url", "");
 String newUrl = ParamUtil.getString(request, "new_url", "");
 //boolean scanLinks = ParamUtil.getBoolean(request, "scan-links", true);
 //boolean scanImages = ParamUtil.getBoolean(request, "scan-images", false);
+boolean scanLinks = ParamUtil.getBoolean(request, "only_scan_links", true);
 boolean useBrowserAgent = ParamUtil.getBoolean(request, "use-browser-agent", true);
+
+if(originalUrl.toLowerCase().startsWith(themeDisplay.getURLPortal())) {
+	originalUrl = originalUrl.replaceFirst(themeDisplay.getURLPortal(), "");
+}
+if(scanLinks && newUrl.toLowerCase().startsWith(themeDisplay.getURLPortal())) {
+	newUrl = newUrl.replaceFirst(themeDisplay.getURLPortal(), "");
+}
 
 String userAgent = "null";
 if (useBrowserAgent)
@@ -19,17 +27,24 @@ List<ContentLinks> contentLinksList = new ArrayList<ContentLinks>();
 
 for (ContentLinks _contentLinks : _contentLinksList) {
 	int links = _contentLinks.getLinksSize();
+	Set<String> theLinks = new java.util.HashSet<String>();
 	for (String link : _contentLinks.getLinks()) {
 		if (!link.toLowerCase().endsWith(originalUrl.toLowerCase())) {
 			links--;
+		}else {
+			theLinks.add(link);
 		}
 	}
+	
 	if (links > 0) {
+		_contentLinks.setLinks(theLinks);
 		contentLinksList.add(_contentLinks);
 	}
 }
 
-contentLinksList = LinkScannerUtil.replaceContentLinks(contentType, scopeGroupId, liferayPortletRequest, liferayPortletResponse, themeDisplay, true, true, originalUrl, newUrl, contentLinksList);
+if(!scanLinks){
+	contentLinksList = LinkScannerUtil.replaceContentLinks(contentType, scopeGroupId, liferayPortletRequest, liferayPortletResponse, themeDisplay, true, true, originalUrl, newUrl, contentLinksList);
+}
 
 int scanCount = 0;
 

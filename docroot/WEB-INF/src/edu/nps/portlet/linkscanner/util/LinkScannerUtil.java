@@ -615,8 +615,9 @@ public class LinkScannerUtil {
 						_log.debug("Extracting links from journal article " + journalArticle.getArticleId() + " - " + journalArticle.getTitle());
 						
 						for (String link : links) {
-
-							contentLinks.addLink(link);
+							if (link.toLowerCase().endsWith(newUrl.toLowerCase())) {
+								contentLinks.addLink(link);
+							}
 						}
 						
 						contentLinksList.add(contentLinks);
@@ -628,62 +629,6 @@ public class LinkScannerUtil {
 				
 			}
 			
-			/*
-			List<JournalArticle> journalArticleList = JournalArticleLocalServiceUtil.getArticles(groupId);
-
-			PortletURL portletURL = liferayPortletResponse.createLiferayPortletURL(
-					PortalUtil.getControlPanelPlid(liferayPortletRequest), 
-					PortletKeys.JOURNAL,
-					PortletRequest.RENDER_PHASE);
-
-			portletURL.setWindowState(LiferayWindowState.POP_UP);
-			portletURL.setParameter("struts_action", "/journal/edit_article");
-
-			for (JournalArticle journalArticle : journalArticleList) {
-
-				if (!hasPermissionView(groupId, journalArticle.getModelClassName(), journalArticle.getPrimaryKey(), themeDisplay)) {
-					continue;
-				}
-
-				if (journalArticle.getStatus() == 8) {
-					continue;
-				}			
-				
-				if (JournalArticleLocalServiceUtil.isLatestVersion(journalArticle.getGroupId(), journalArticle.getArticleId(), journalArticle.getVersion())) {
-
-					String content = JournalContentUtil.getContent(groupId, journalArticle.getArticleId(), null, null, themeDisplay.getLanguageId(), themeDisplay);
-
-					if (content != null) {
-
-						List<String> links = parseLinks(content, getLinks, getImages);
-
-						if (links.size() > 0) {
-
-							portletURL.setParameter("groupId", String.valueOf(journalArticle.getGroupId()));
-							portletURL.setParameter("articleId", journalArticle.getArticleId());
-							portletURL.setParameter("version", String.valueOf(journalArticle.getVersion()));
-
-							ContentLinks contentLinks = new ContentLinks();
-							contentLinks.setClassName(journalArticle.getModelClassName());
-							contentLinks.setClassPK(journalArticle.getArticleId());
-							contentLinks.setContentTitle(journalArticle.getTitle(themeDisplay.getLocale()));
-							contentLinks.setContentEditLink(portletURL.toString());
-							contentLinks.setModifiedDate(journalArticle.getModifiedDate());
-							contentLinks.setStatus(journalArticle.getStatus());
-							
-							_log.debug("Extracting links from journal article " + journalArticle.getArticleId() + " - " + journalArticle.getTitle());
-							
-							for (String link : links) {
-
-								contentLinks.addLink(link);
-							}
-							
-							contentLinksList.add(contentLinks);
-						}
-					}
-				}
-			}
-			*/
 			return contentLinksList;
 		}
 	
