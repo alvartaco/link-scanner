@@ -566,7 +566,7 @@ public class LinkScannerUtil {
 				if (JournalArticleLocalServiceUtil.isLatestVersion(journalArticle.getGroupId(), journalArticle.getArticleId(), journalArticle.getVersion())) {
 					String content = JournalContentUtil.getContent(groupId, journalArticle.getArticleId(), null, null, themeDisplay.getLanguageId(), themeDisplay);
 					if (content != null) {
-						content = content.replaceFirst(originalUrl, newUrl);
+						content = content.replaceAll(originalUrl, newUrl);
 						
 						String result = null;
 						Element rootElement = SAXReaderUtil.createElement("root");
@@ -580,7 +580,7 @@ public class LinkScannerUtil {
 							e.printStackTrace();
 						}        
 						
-						//JournalArticleLocalServiceUtil.updateContent(groupId, journalArticle.getArticleId(), journalArticle.getVersion(), result);
+						JournalArticleLocalServiceUtil.updateContent(groupId, journalArticle.getArticleId(), journalArticle.getVersion(), result);
 					}
 				}
 				

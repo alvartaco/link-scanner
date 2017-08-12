@@ -4,15 +4,25 @@
 String contentType = ParamUtil.getString(request, "content-type", "web-content");
 String originalUrl = ParamUtil.getString(request, "original_url", "");
 String newUrl = ParamUtil.getString(request, "new_url", "");
-//boolean scanLinks = ParamUtil.getBoolean(request, "scan-links", true);
-//boolean scanImages = ParamUtil.getBoolean(request, "scan-images", false);
 boolean scanLinks = ParamUtil.getBoolean(request, "only_scan_links", true);
 boolean useBrowserAgent = ParamUtil.getBoolean(request, "use-browser-agent", true);
+//String redirectFull=ParamUtil.getString(request, "redirect-full", redirect);
+//String _redirect=ParamUtil.getString(request, "redirect", redirect);
+
+String redirectFull2 = redirect + 
+			"&_linkscanner_WAR_linkscannerportlet_original_url=" + originalUrl + 
+			"&_linkscanner_WAR_linkscannerportlet_new_url=" + newUrl +
+			"&_linkscanner_WAR_linkscannerportlet_only_scan_links=" + scanLinks +
+			"&_linkscanner_WAR_linkscannerportlet_content-type=" + contentType;
+
+String back = "javascript:history.go(-1);";
+
+String headerTitle = contentType + "-" + (scanLinks ? "search" : "update");
 
 if(originalUrl.toLowerCase().startsWith(themeDisplay.getURLPortal())) {
 	originalUrl = originalUrl.replaceFirst(themeDisplay.getURLPortal(), "");
 }
-if(scanLinks && newUrl.toLowerCase().startsWith(themeDisplay.getURLPortal())) {
+if(!scanLinks && newUrl.toLowerCase().startsWith(themeDisplay.getURLPortal())) {
 	newUrl = newUrl.replaceFirst(themeDisplay.getURLPortal(), "");
 }
 
@@ -56,8 +66,8 @@ boolean rowAlt = true;
 %>
 
 <liferay-ui:header
-	backURL="<%= redirect %>"
-	title="<%= contentType %>"
+	backURL="<%= back %>"
+	title="<%= headerTitle %>"
 />
 
 <c:choose>
