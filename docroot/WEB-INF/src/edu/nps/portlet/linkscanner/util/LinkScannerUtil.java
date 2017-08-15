@@ -165,7 +165,10 @@ public class LinkScannerUtil {
 
 		String contentType = "web-content";
 		
+		// All Webcontents that have links
 		List<ContentLinks> _contentLinksList = LinkScannerUtil.getContentLinks(contentType, groupId, liferayPortletRequest, liferayPortletResponse, themeDisplay, true, false);
+		
+		// It will contain the Webcontents with the specified URL to be replaces
 		List<ContentLinks> contentLinksList = new ArrayList<ContentLinks>();
 
 		for (ContentLinks _contentLinks : _contentLinksList) {
@@ -185,6 +188,7 @@ public class LinkScannerUtil {
 			}
 		}		
 		
+		//It replaces the URLS and returns the results replaced.
 		return replaceWebContentLinks(groupId, liferayPortletRequest, liferayPortletResponse, themeDisplay, true, false, originalUrl, newUrl, contentLinksList);
 
 	}	
@@ -597,7 +601,6 @@ public class LinkScannerUtil {
 			List<ContentLinks> contentLinksList = new ArrayList<ContentLinks>();
 
 			for (ContentLinks _contentLinks : _contentLinksList) {
-				//JournalArticle journalArticle = JournalArticleLocalServiceUtil.getArticle(groupId, _contentLinks.getClassName(), (new Long(_contentLinks.getClassPK())).longValue());
 				JournalArticle journalArticle = JournalArticleLocalServiceUtil.getLatestArticle(groupId, _contentLinks.getClassPK());
 				if (JournalArticleLocalServiceUtil.isLatestVersion(journalArticle.getGroupId(), journalArticle.getArticleId(), journalArticle.getVersion())) {
 					String content = JournalContentUtil.getContent(groupId, journalArticle.getArticleId(), null, null, themeDisplay.getLanguageId(), themeDisplay);
@@ -659,12 +662,7 @@ public class LinkScannerUtil {
 						contentLinksList.add(contentLinks);
 					}
 				}				
-				
-				
-				
-				
 			}
-			
 			return contentLinksList;
 		}
 	
