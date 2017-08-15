@@ -17,6 +17,10 @@ String webContent = "web-content";
 	<portlet:param name="mvcPath" value='<%= templatePath + "scanner.jsp" %>' />
 </liferay-portlet:renderURL>
 
+<liferay-portlet:renderURL varImpl="testReplaceLinksURL">
+	<portlet:param name="mvcPath" value='<%= templatePath + "test.jsp" %>' />
+</liferay-portlet:renderURL>
+
 <aui:form action="<%= extractLinksURL %>" method="get" name="fm">
 	<liferay-portlet:renderURLParams varImpl="extractLinksURL" />
 	<aui:input name="content-type" type="hidden" value="<%= webContent %>" />
@@ -44,6 +48,13 @@ String webContent = "web-content";
 		</aui:button-row>
 
 	</aui:fieldset>
+</aui:form>
+
+<aui:form action="<%= testReplaceLinksURL %>" method="get" name="fmtest">
+	<liferay-portlet:renderURLParams varImpl="testReplaceLinksURL" />
+		<aui:button-row>
+			<aui:button onClick='<%= renderResponse.getNamespace() + "testReplaceLinks();" %>' value="test" />
+		</aui:button-row>
 </aui:form>
 
 <aui:script>
@@ -76,4 +87,13 @@ String webContent = "web-content";
 		}
 		
 	}
+	function <portlet:namespace />testReplaceLinks() {
+		var server_url = "<%=themeDisplay.getURLPortal()%>";
+		var original_url = (<portlet:namespace />original_url.value);
+		var new_url = (<portlet:namespace />new_url.value);
+
+				submitForm(document.<portlet:namespace />fmtest);
+
+		
+	}	
 </aui:script>

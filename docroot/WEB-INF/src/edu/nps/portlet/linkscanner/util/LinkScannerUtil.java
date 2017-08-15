@@ -154,6 +154,42 @@ public class LinkScannerUtil {
 		}
 	}	
 	
+	public static List<ContentLinks> searchAndReplaceLinksInWebContent(
+			long groupId, 
+			LiferayPortletRequest liferayPortletRequest,
+			LiferayPortletResponse liferayPortletResponse,
+			ThemeDisplay themeDisplay, 
+			String originalUrl,
+			String newUrl)
+		throws Exception {
+
+		String contentType = "web-content";
+		
+		List<ContentLinks> _contentLinksList = LinkScannerUtil.getContentLinks(contentType, groupId, liferayPortletRequest, liferayPortletResponse, themeDisplay, true, false);
+		List<ContentLinks> contentLinksList = new ArrayList<ContentLinks>();
+
+		for (ContentLinks _contentLinks : _contentLinksList) {
+			int links = _contentLinks.getLinksSize();
+			Set<String> theLinks = new java.util.HashSet<String>();
+			for (String link : _contentLinks.getLinks()) {
+				if (!link.toLowerCase().endsWith(originalUrl.toLowerCase())) {
+					links--;
+				}else {
+					theLinks.add(link);
+				}
+			}
+			
+			if (links > 0) {
+				_contentLinks.setLinks(theLinks);
+				contentLinksList.add(_contentLinks);
+			}
+		}		
+		
+		return replaceWebContentLinks(groupId, liferayPortletRequest, liferayPortletResponse, themeDisplay, true, false, originalUrl, newUrl, contentLinksList);
+
+	}	
+		
+	
 	public static List<ContentLinks> getBlogLinks(
 			long groupId, 
 			LiferayPortletRequest liferayPortletRequest,
