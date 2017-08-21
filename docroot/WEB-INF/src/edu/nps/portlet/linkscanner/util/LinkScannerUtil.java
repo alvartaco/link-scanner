@@ -144,11 +144,14 @@ public class LinkScannerUtil {
 			boolean getImages,
 			String originalUrl,
 			String newUrl,
-			List<ContentLinks> contentLinksList)
+			List<ContentLinks> contentLinksList,
+			String originalUrlPD,
+			String newUrlPD
+			)
 		throws Exception {
 
 		if (contentType.equals("web-content")) {
-			return replaceWebContentLinks(groupId, liferayPortletRequest, liferayPortletResponse, themeDisplay, getLinks, getImages, originalUrl, newUrl, contentLinksList);
+			return replaceWebContentLinks(groupId, liferayPortletRequest, liferayPortletResponse, themeDisplay, getLinks, getImages, originalUrl, newUrl, contentLinksList, originalUrlPD, newUrlPD);
 		} else {
 			return null;
 		}
@@ -160,7 +163,10 @@ public class LinkScannerUtil {
 			LiferayPortletResponse liferayPortletResponse,
 			ThemeDisplay themeDisplay, 
 			String originalUrl,
-			String newUrl)
+			String newUrl,
+			String originalUrlPD,
+			String newUrlPD
+			)
 		throws Exception {
 
 		String contentType = "web-content";
@@ -189,7 +195,7 @@ public class LinkScannerUtil {
 		}		
 		
 		//It replaces the URLS and returns the results replaced.
-		return replaceWebContentLinks(groupId, liferayPortletRequest, liferayPortletResponse, themeDisplay, true, false, originalUrl, newUrl, contentLinksList);
+		return replaceWebContentLinks(groupId, liferayPortletRequest, liferayPortletResponse, themeDisplay, true, false, originalUrl, newUrl, contentLinksList, originalUrlPD, newUrlPD);
 
 	}	
 		
@@ -593,7 +599,10 @@ public class LinkScannerUtil {
 			boolean getImages,
 			String originalUrl,
 			String newUrl,
-			List<ContentLinks> _contentLinksList)
+			List<ContentLinks> _contentLinksList,
+			String originalUrlPD,
+			String newUrlPD
+			)
 			throws Exception {
 
 			_log.debug("repalceWebContentLinks for groupId " + String.valueOf(groupId));
@@ -602,10 +611,18 @@ public class LinkScannerUtil {
 
 			for (ContentLinks _contentLinks : _contentLinksList) {
 				JournalArticle journalArticle = JournalArticleLocalServiceUtil.getLatestArticle(groupId, _contentLinks.getClassPK());
+				String content = "";
 				if (JournalArticleLocalServiceUtil.isLatestVersion(journalArticle.getGroupId(), journalArticle.getArticleId(), journalArticle.getVersion())) {
-					String content = JournalContentUtil.getContent(groupId, journalArticle.getArticleId(), null, null, themeDisplay.getLanguageId(), themeDisplay);
+					content = JournalContentUtil.getContent(groupId, journalArticle.getArticleId(), null, null, themeDisplay.getLanguageId(), themeDisplay);
 					if (content != null) {
-						content = content.replaceAll(originalUrl, newUrl);
+						if (!newUrl.equals("")) {
+							content = content.replaceAll(originalUrl, newUrl);
+							//content = content;
+						}
+						if (!originalUrlPD.equalsIgnoreCase(newUrlPD)) {
+							content = content.replaceAll(originalUrlPD, newUrlPD);
+							//content = content;
+						}
 						
 						String result = null;
 						Element rootElement = SAXReaderUtil.createElement("root");
@@ -631,9 +648,9 @@ public class LinkScannerUtil {
 				portletURL.setWindowState(LiferayWindowState.POP_UP);
 				portletURL.setParameter("struts_action", "/journal/edit_article");
 				
-				String content = JournalContentUtil.getContent(groupId, journalArticle.getArticleId(), null, null, themeDisplay.getLanguageId(), themeDisplay);
+				//String content = JournalContentUtil.getContent(groupId, journalArticle.getArticleId(), null, null, themeDisplay.getLanguageId(), themeDisplay);
 
-				if (content != null) {
+				//if (content != null) {
 
 					List<String> links = parseLinks(content, getLinks, getImages);
 
@@ -654,14 +671,16 @@ public class LinkScannerUtil {
 						_log.debug("Extracting links from journal article " + journalArticle.getArticleId() + " - " + journalArticle.getTitle());
 						
 						for (String link : links) {
-							if (link.toLowerCase().endsWith(newUrl.toLowerCase())) {
+							if (!newUrl.equals("") && link.toLowerCase().contains(newUrl.toLowerCase())) {
+								contentLinks.addLink(link);
+							} else if (link.toLowerCase().startsWith(newUrlPD.toLowerCase())) {
 								contentLinks.addLink(link);
 							}
 						}
 						
 						contentLinksList.add(contentLinks);
 					}
-				}				
+				//}				
 			}
 			return contentLinksList;
 		}

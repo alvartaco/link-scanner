@@ -1,7 +1,6 @@
 <?xml version="1.0"?>
 
 <portlet-app xmlns="http://java.sun.com/xml/ns/portlet/portlet-app_2_0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/portlet/portlet-app_2_0.xsd http://java.sun.com/xml/ns/portlet/portlet-app_2_0.xsd" version="2.0">
-	
 	<portlet>
 		<portlet-name>linkscanner</portlet-name>
 		<display-name>Link Scanner</display-name>
@@ -33,6 +32,39 @@
 		<portlet-info>
 			<title>Link Scanner</title>
 			<short-title>Link Scan</short-title>
+			<keywords></keywords>
+		</portlet-info>
+		<security-role-ref>
+			<role-name>administrator</role-name>
+		</security-role-ref>
+	</portlet>
+	<portlet>
+		<portlet-name>linksupdater</portlet-name>
+		<display-name>Link Updater</display-name>
+		<portlet-class>
+			edu.nps.portlet.linkscanner.DisplayPortlet
+		</portlet-class>
+		<init-param>
+			<name>view-template</name>
+			<value>/html/display/viewupdater.jsp</value>
+		</init-param>
+		<init-param>
+			<name>template-path</name>
+			<value>/html/display/</value>
+		</init-param>
+		<init-param>
+			<name>copy-request-parameters</name>
+			<value>true</value>
+		</init-param>
+		<expiration-cache>0</expiration-cache>
+		<supports>
+			<mime-type>text/html</mime-type>
+			<portlet-mode>view</portlet-mode>
+		</supports>
+		<resource-bundle>content.Language</resource-bundle>
+		<portlet-info>
+			<title>Link Updater</title>
+			<short-title>Link Updater</short-title>
 			<keywords></keywords>
 		</portlet-info>
 		<security-role-ref>

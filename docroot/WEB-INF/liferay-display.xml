@@ -5,5 +5,6 @@
 	
 	<category name="category.tools">
 		<portlet id="linkscanner"></portlet>
+		<portlet id="linksupdater"></portlet>
 	</category>
 </display>

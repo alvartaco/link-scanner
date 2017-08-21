@@ -2,18 +2,174 @@
 
 <%
 String contentType = ParamUtil.getString(request, "content-type", "web-content");
-
-boolean scanLinks = ParamUtil.getBoolean(request, "scan-links", true);
-boolean scanImages = ParamUtil.getBoolean(request, "scan-images", false);
+String originalUrl = ParamUtil.getString(request, "original_url", "");
+String newUrl = ParamUtil.getString(request, "new_url", "");
+String relativeOriginalUrl = "";
+String relativeNewUrl = "";
+boolean scanLinks = ParamUtil.getBoolean(request, "only_scan_links", true);
 boolean useBrowserAgent = ParamUtil.getBoolean(request, "use-browser-agent", true);
+
+java.net.URI uriOriginalUrl = new URI(originalUrl);
+String originalDomain = uriOriginalUrl.getHost();
+String originalProtocol = originalUrl.toLowerCase().startsWith("http:")?"http://":"https://";
+String originalUrlPD = originalProtocol+originalDomain; 
+
+java.net.URI uriNewUrl = new URI(newUrl);
+String newDomain = uriNewUrl.getHost();
+String newProtocol = newUrl.toLowerCase().startsWith("http:")?"http://":"https://";
+String newUrlPD = newProtocol+newDomain; 
+
+String back = "javascript:history.go(-1);";
+
+String headerTitle = contentType + "-" + (scanLinks ? "search" : "update");
+
+relativeOriginalUrl = originalUrl.replaceFirst(originalUrlPD, "");
+
+if(!scanLinks) {
+	relativeNewUrl = newUrl.replaceFirst(newUrlPD, "");
+}
 
 String userAgent = "null";
 if (useBrowserAgent)
 	userAgent = request.getHeader("User-Agent");
 
-String scanType = LinkScannerConstants.linkImagesLabel(scanLinks, scanImages);
+String scanType = LinkScannerConstants.linkImagesLabel(true, false);
 
-List<ContentLinks> contentLinksList = LinkScannerUtil.getContentLinks(contentType, scopeGroupId, liferayPortletRequest, liferayPortletResponse, themeDisplay, scanLinks, scanImages);
+List<ContentLinks> _contentLinksList = LinkScannerUtil.getContentLinks(contentType, scopeGroupId, liferayPortletRequest, liferayPortletResponse, themeDisplay, true, false);
+List<ContentLinks> contentLinksList = new ArrayList<ContentLinks>();
+
+for (ContentLinks _contentLinks : _contentLinksList) {
+	int links = _contentLinks.getLinksSize();
+	Set<String> theLinks = new java.util.HashSet<String>();
+	for (String link : _contentLinks.getLinks()) {
+		/*
+		if (!link.toLowerCase().endsWith(originalUrl.toLowerCase())) {
+			links--;
+		}else {
+			theLinks.add(link);
+		}
+		*/
+		if (relativeOriginalUrl.equals("")) {
+			
+			//if (	link.toLowerCase().contains(originalUrlPD.toLowerCase()) ) {
+			if (	link.toLowerCase().startsWith(originalUrlPD.toLowerCase()) ) {	
+					theLinks.add(link);
+					
+			} else {
+				links--;
+			}
+
+		} else {
+			
+			if (	link.toLowerCase().equals(originalUrl.toLowerCase()) || 
+					link.toLowerCase().equals(relativeOriginalUrl.toLowerCase())
+					) {
+				
+					theLinks.add(link);
+					
+			} else if (link.toLowerCase().contains(relativeOriginalUrl.toLowerCase())) {
+				
+				if (	link.toLowerCase().equals("/web/guest" + relativeOriginalUrl.toLowerCase()) ||
+						link.toLowerCase().equals("/group" + relativeOriginalUrl.toLowerCase())
+						) {
+					
+					theLinks.add(link);	
+					
+				} else if (	link.toLowerCase().startsWith("/web/guest" + relativeOriginalUrl.toLowerCase()) ||
+							link.toLowerCase().startsWith("/group" + relativeOriginalUrl.toLowerCase())
+							) {
+						
+					if (	link.toLowerCase().replaceFirst("/web/guest" + relativeOriginalUrl.toLowerCase(), "").startsWith("/") ||
+							link.toLowerCase().replaceFirst("/group" + relativeOriginalUrl.toLowerCase(), "").startsWith("?") ||
+							link.toLowerCase().replaceFirst("/web/guest" + relativeOriginalUrl.toLowerCase(), "").equals("") ||
+							link.toLowerCase().replaceFirst("/group" + relativeOriginalUrl.toLowerCase(), "").equals("") 
+							) {
+						
+						theLinks.add(link);	
+					
+					} else {
+						links--;
+					}	
+						
+				} else if (	link.toLowerCase().startsWith(originalUrlPD + "/web/guest" + relativeOriginalUrl.toLowerCase()) ||
+							link.toLowerCase().startsWith(originalUrlPD + "/group" + relativeOriginalUrl.toLowerCase())
+							) {
+					
+					if (	link.toLowerCase().replaceFirst(originalUrlPD + "/web/guest" + relativeOriginalUrl.toLowerCase(), "").startsWith("/") ||
+							link.toLowerCase().replaceFirst(originalUrlPD + "/group" + relativeOriginalUrl.toLowerCase(), "").startsWith("?") ||
+							link.toLowerCase().replaceFirst(originalUrlPD + "/web/guest" + relativeOriginalUrl.toLowerCase(), "").equals("") ||
+							link.toLowerCase().replaceFirst(originalUrlPD + "/group" + relativeOriginalUrl.toLowerCase(), "").equals("")
+							) {
+						
+						theLinks.add(link);	
+					
+					} else {
+						links--;
+					}	
+					
+				} else if (	link.toLowerCase().startsWith(originalUrlPD + relativeOriginalUrl.toLowerCase()) ||
+							link.toLowerCase().startsWith(originalUrlPD + relativeOriginalUrl.toLowerCase())
+							) {
+					
+					if (	link.toLowerCase().replaceFirst(originalUrlPD + relativeOriginalUrl.toLowerCase(), "").startsWith("/") ||
+							link.toLowerCase().replaceFirst(originalUrlPD + relativeOriginalUrl.toLowerCase(), "").startsWith("?") ||
+							link.toLowerCase().replaceFirst(originalUrlPD + relativeOriginalUrl.toLowerCase(), "").equals("") ||
+							link.toLowerCase().replaceFirst(originalUrlPD + relativeOriginalUrl.toLowerCase(), "").equals("")
+							) {
+						
+						theLinks.add(link);	
+					
+					} else {
+						links--;
+					}
+				
+				} else if (	link.toLowerCase().startsWith(relativeOriginalUrl.toLowerCase())) {
+					
+					if (	link.toLowerCase().replaceFirst(relativeOriginalUrl.toLowerCase(), "").startsWith("/") ||
+							link.toLowerCase().replaceFirst(relativeOriginalUrl.toLowerCase(), "").startsWith("?") ||
+							link.toLowerCase().replaceFirst(relativeOriginalUrl.toLowerCase(), "").equals("") ||
+							link.toLowerCase().replaceFirst(relativeOriginalUrl.toLowerCase(), "").equals("")
+							) {
+						
+						theLinks.add(link);	
+					
+					} else {
+						links--;
+					}
+					
+				} else if (	link.toLowerCase().endsWith(relativeOriginalUrl.toLowerCase())) {
+					
+					if (	link.toLowerCase().replaceFirst(relativeOriginalUrl.toLowerCase(), "").startsWith("/") ||
+							link.toLowerCase().replaceFirst(relativeOriginalUrl.toLowerCase(), "").startsWith("?") ||
+							link.toLowerCase().replaceFirst(relativeOriginalUrl.toLowerCase(), "").equals("") ||
+							link.toLowerCase().replaceFirst(relativeOriginalUrl.toLowerCase(), "").equals("")
+							) {
+						
+						theLinks.add(link);	
+					
+					} else {
+						links--;
+					}					
+					
+				} else {
+					links--;
+				}
+				
+			}else {
+				links--;
+			}	
+		}
+	}
+	
+	if (links > 0) {
+		_contentLinks.setLinks(theLinks);
+		contentLinksList.add(_contentLinks);
+	}
+}
+
+if(!scanLinks){
+	contentLinksList = LinkScannerUtil.replaceContentLinks(contentType, scopeGroupId, liferayPortletRequest, liferayPortletResponse, themeDisplay, true, false, relativeOriginalUrl, relativeNewUrl, contentLinksList, originalUrlPD, newUrlPD);
+}
 
 int scanCount = 0;
 
@@ -25,8 +181,8 @@ boolean rowAlt = true;
 %>
 
 <liferay-ui:header
-	backURL="<%= redirect %>"
-	title="<%= contentType %>"
+	backURL="<%= back %>"
+	title="<%= headerTitle %>"
 />
 
 <c:choose>
@@ -81,39 +237,40 @@ boolean rowAlt = true;
 	for (ContentLinks contentLinks : contentLinksList) {
 
 		rowAlt = !rowAlt;
-%>
-					<tr class="link-scanner-row-content results-row <%= (rowAlt?"portlet-section-alternate alt":"portlet-section-body") %>">
-						<td class="table-cell align-left col-1 first valign-middle" colspan="1" headers="<portlet:namespace/>SearchContainer_col-result">&nbsp;</td>
-						<td class="table-cell align-left col-2 last valign-middle" colspan="1" headers="<portlet:namespace/>SearchContainer_col-title-link">
-<%
-		if (contentType.equals("rss-portlet-subscriptions") || 
-			permissionChecker.hasPermission(
-			scopeGroupId, contentLinks.getClassName(),
-			contentLinks.getClassPK(), "UPDATE")) {
-
-			String editUrl = contentType.equals("rss-portlet-subscriptions") ? contentLinks.getContentEditLink() : 
-				"javascript:Liferay.Util.openWindow({id: '" + renderResponse.getNamespace() + "editAsset', " + 
-				"title: '" + LanguageUtil.format(pageContext, "edit-x", HtmlUtil.escape(contentLinks.getContentTitle())) + "', " + 
-				"uri:'" + HtmlUtil.escapeURL(contentLinks.getContentEditLink()) + "'});";
-%>
-							<liferay-ui:icon
-								image="edit"
-								label="<%= true %>"
-								message="<%= contentLinks.getContentTitle() %>"
-								target='<%= contentType.equals("rss-portlet-subscriptions") ? "_blank" : null %>'
-								url="<%= editUrl %>"
-							/>
-<%
-		}
-		else {
-%>
-							<%= HtmlUtil.escape(contentLinks.getContentTitle()) %>
-<%
-		}
-%>
-						</td>
-					</tr>
-<%
+		
+		%>
+		<tr class="link-scanner-row-content results-row <%= (rowAlt?"portlet-section-alternate alt":"portlet-section-body") %>">
+			<td class="table-cell align-left col-1 first valign-middle" colspan="1" headers="<portlet:namespace/>SearchContainer_col-result">&nbsp;</td>
+			<td class="table-cell align-left col-2 last valign-middle" colspan="1" headers="<portlet:namespace/>SearchContainer_col-title-link">
+			
+			<%
+			if (contentType.equals("rss-portlet-subscriptions") || 
+				permissionChecker.hasPermission(
+				scopeGroupId, contentLinks.getClassName(),
+				contentLinks.getClassPK(), "UPDATE")) {
+	
+				String editUrl = contentType.equals("rss-portlet-subscriptions") ? contentLinks.getContentEditLink() : 
+					"javascript:Liferay.Util.openWindow({id: '" + renderResponse.getNamespace() + "editAsset', " + 
+					"title: '" + LanguageUtil.format(pageContext, "edit-x", HtmlUtil.escape(contentLinks.getContentTitle())) + "', " + 
+					"uri:'" + HtmlUtil.escapeURL(contentLinks.getContentEditLink()) + "'});";
+			%>
+					<liferay-ui:icon
+						image="edit"
+						label="<%= true %>"
+						message="<%= contentLinks.getContentTitle() %>"
+						target='<%= contentType.equals("rss-portlet-subscriptions") ? "_blank" : null %>'
+						url="<%= editUrl %>"
+					/>
+			<%
+			} else {
+			%>
+					<%= HtmlUtil.escape(contentLinks.getContentTitle()) %>
+			<%
+			}
+			%>
+			</td>
+		</tr>
+		<%
 		for (String link : contentLinks.getLinks()) {
 
 			rowAlt = !rowAlt;
@@ -127,7 +284,7 @@ boolean rowAlt = true;
 					
 				}
 			}
-%>
+			%>
 					<tr class="link-scanner-row-link results-row <%= (rowAlt?"portlet-section-alternate alt":"portlet-section-body") %>">
 						<td class="table-cell align-left col-1 first valign-middle" colspan="1" headers="<portlet:namespace/>SearchContainer_col-result">
 							<div class="link-scanner-result link-scanner-unchecked" title="" data-link="<%= link %>" data-isportal="<%= LinkScannerUtil.isPortalLink(link, themeDisplay) %>"></div>
@@ -136,7 +293,7 @@ boolean rowAlt = true;
 							<a href="<%= link %>" target="_blank" class="link-scanner-link"><%= HtmlUtil.escape(linkShort) %></a>
 						</td>
 					</tr>
-<%
+			<%
 		}
 	}
 %>
@@ -174,6 +331,7 @@ boolean rowAlt = true;
 									node.removeClass('link-scanner-error');
 									node.addClass('link-scanner-success');
 									node.attr('title','AJAX Success');
+									//node.ancestor('tr').setStyle('display', 'none');
 								}
 							}
 						}
@@ -203,6 +361,7 @@ boolean rowAlt = true;
 											node.removeClass('link-scanner-error');
 											node.removeClass('link-scanner-redirect');
 											node.addClass('link-scanner-success');
+											//node.ancestor('tr').setStyle('display', 'none');
 										} else if (response[0] >= 300 && response[0] < 400) {
 											node.removeClass('link-scanner-unchecked');
 											node.removeClass('link-scanner-error');
@@ -269,7 +428,7 @@ boolean rowAlt = true;
 					value: progressBarCount
 				}
 			).render();
-	<portlet:namespace />scanLinks();
+			<portlet:namespace />scanLinks();
 		}
 	);
 </aui:script>
