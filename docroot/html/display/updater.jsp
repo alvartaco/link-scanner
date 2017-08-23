@@ -177,7 +177,6 @@ for (ContentLinks contentLinks : contentLinksList) {
 	scanCount = scanCount + contentLinks.getLinksSize();
 }
 
-boolean rowAlt = true;
 %>
 
 <liferay-ui:header
@@ -235,11 +234,9 @@ boolean rowAlt = true;
 
 <%
 	for (ContentLinks contentLinks : contentLinksList) {
-
-		rowAlt = !rowAlt;
 		
 		%>
-		<tr class="link-scanner-row-content results-row <%= (rowAlt?"portlet-section-alternate alt":"portlet-section-body") %>">
+		<tr class="link-scanner-row-content results-row portlet-section-body">
 			<td class="table-cell align-left col-1 first valign-middle" colspan="1" headers="<portlet:namespace/>SearchContainer_col-result">&nbsp;</td>
 			<td class="table-cell align-left col-2 last valign-middle" colspan="1" headers="<portlet:namespace/>SearchContainer_col-title-link">
 			
@@ -273,7 +270,6 @@ boolean rowAlt = true;
 		<%
 		for (String link : contentLinks.getLinks()) {
 
-			rowAlt = !rowAlt;
 			String linkShort = (link.length() > 150 ? link.substring(0, 150) + "..." : link);
 
 			if (link.startsWith("//")) {
@@ -285,7 +281,7 @@ boolean rowAlt = true;
 				}
 			}
 			%>
-					<tr class="link-scanner-row-link results-row <%= (rowAlt?"portlet-section-alternate alt":"portlet-section-body") %>">
+					<tr class="link-scanner-row-link results-row portlet-section-body">
 						<td class="table-cell align-left col-1 first valign-middle" colspan="1" headers="<portlet:namespace/>SearchContainer_col-result">
 							<div class="link-scanner-result link-scanner-unchecked" title="" data-link="<%= link %>" data-isportal="<%= LinkScannerUtil.isPortalLink(link, themeDisplay) %>"></div>
 						</td>

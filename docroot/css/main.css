@@ -83,3 +83,7 @@ tr.link-scanner-row-link td.col-2 {
     padding-right: 10px;
     text-align: right;
 }
+
+.aui .table-striped tbody>tr>td {
+    background-color: white;
+}

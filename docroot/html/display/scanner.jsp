@@ -27,7 +27,7 @@ for (ContentLinks contentLinks : contentLinksList) {
 	scanCount = scanCount + contentLinks.getLinksSize();
 }
 
-boolean rowAlt = true;
+boolean rowAlt = false;
 %>
 
 <liferay-ui:header
