@@ -27,6 +27,18 @@
 			<aui:input inlineLabel="right" name="scan-images" type="checkbox" />
 		</aui:field-wrapper>
 
+		<aui:field-wrapper label="show">
+			<div class="link-scanner-result-legend link-scanner-success">
+				<aui:input inlineLabel="right" name="link-success" type="checkbox" checked="<%= true %>" />
+			</div>
+			<div class="link-scanner-result-legend link-scanner-redirect">
+				<aui:input inlineLabel="right" name="link-redirect" type="checkbox" checked="<%= true %>" />
+			</div>
+			<div class="link-scanner-result-legend link-scanner-error">
+				<aui:input inlineLabel="right" name="link-error" type="checkbox" checked="<%= true %>" />
+			</div>
+		</aui:field-wrapper>
+
 		<aui:field-wrapper label="options">
 			<aui:input inlineLabel="right" name="use-browser-agent" type="checkbox" checked="<%= true %>" helpMessage="use-browser-agent-help" />
 		</aui:field-wrapper>

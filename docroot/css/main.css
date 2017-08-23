@@ -44,10 +44,42 @@
 	float: right;
 }
 
+.link-scanner-legend-counter {
+	float: left;
+}
+
+.link-scanner-legend-right {
+	float: left;
+}
+
 .linkscanner-portlet .accordion-inner {
 	overflow: hidden;
 }
 
 tr.link-scanner-row-link td.col-2 {
 	padding-left: 20px;
+}
+
+#linkSuccess {
+    padding-left: 50px;
+    padding-right: 10px;	
+    text-align: right;
+}
+
+#linkRedirect {
+    padding-left: 50px;
+    padding-right: 10px;
+    text-align: right;
+}
+
+#linkError {
+    padding-left: 50px;
+    padding-right: 10px;
+    text-align: right;
+}
+
+#scanCount {
+    padding-left: 50px;
+    padding-right: 10px;
+    text-align: right;
 }

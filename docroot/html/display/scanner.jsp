@@ -7,6 +7,12 @@ boolean scanLinks = ParamUtil.getBoolean(request, "scan-links", true);
 boolean scanImages = ParamUtil.getBoolean(request, "scan-images", false);
 boolean useBrowserAgent = ParamUtil.getBoolean(request, "use-browser-agent", true);
 
+boolean linkSuccess = ParamUtil.getBoolean(request, "link-success", true);
+boolean linkRedirect = ParamUtil.getBoolean(request, "link-redirect", true);
+boolean linkError = ParamUtil.getBoolean(request, "link-error", true);
+
+String back = "javascript:history.go(-1);";
+
 String userAgent = "null";
 if (useBrowserAgent)
 	userAgent = request.getHeader("User-Agent");
@@ -25,7 +31,7 @@ boolean rowAlt = true;
 %>
 
 <liferay-ui:header
-	backURL="<%= redirect %>"
+	backURL="<%= back %>"
 	title="<%= contentType %>"
 />
 
@@ -50,13 +56,22 @@ boolean rowAlt = true;
 
 			<liferay-ui:panel collapsible="<%= true %>" extended="<%= true %>" id="linkScannerOptions" persistState="<%= true %>" title="options">
 				<liferay-ui:message key="result-hover-description" />
+				</br>
+				<div class="link-scanner-legend-counter">
+					<strong>&nbsp;</strong></br>
+					<div id="scanCount"><%=scanCount%></div>
+					<div id="linkSuccess">0</div>
+					<div id="linkRedirect">0</div>
+					<div id="linkError">0</div>
+				</div>				
 				
-				<div class="link-scanner-legend">
+				<div class="link-scanner-legend-right">
 					<strong>Legend</strong>
 					<div class="link-scanner-result-legend link-scanner-unchecked"><liferay-ui:message key="link-unchecked" /></div>
 					<div class="link-scanner-result-legend link-scanner-success"><liferay-ui:message key="link-success" /></div>
 					<div class="link-scanner-result-legend link-scanner-redirect"><liferay-ui:message key="link-redirect" /></div>
 					<div class="link-scanner-result-legend link-scanner-error"><liferay-ui:message key="link-error" /></div>
+					
 				</div>
 			</liferay-ui:panel>
 		</div>
@@ -71,7 +86,7 @@ boolean rowAlt = true;
 							<span class="result-column-name">Result</span>
 						</th>
 						<th class="col-2 last table-last-header" id="<portlet:namespace/>SearchContainer_col-title-link">
-							<span class="result-column-name">Title / Link(s)</span>
+							<span class="result-column-name">Title / Link</span>
 						</th>
 					</tr>
 				</thead>
@@ -80,43 +95,11 @@ boolean rowAlt = true;
 <%
 	for (ContentLinks contentLinks : contentLinksList) {
 
-		rowAlt = !rowAlt;
-%>
-					<tr class="link-scanner-row-content results-row <%= (rowAlt?"portlet-section-alternate alt":"portlet-section-body") %>">
-						<td class="table-cell align-left col-1 first valign-middle" colspan="1" headers="<portlet:namespace/>SearchContainer_col-result">&nbsp;</td>
-						<td class="table-cell align-left col-2 last valign-middle" colspan="1" headers="<portlet:namespace/>SearchContainer_col-title-link">
-<%
-		if (contentType.equals("rss-portlet-subscriptions") || 
-			permissionChecker.hasPermission(
-			scopeGroupId, contentLinks.getClassName(),
-			contentLinks.getClassPK(), "UPDATE")) {
+		//rowAlt = !rowAlt;
 
-			String editUrl = contentType.equals("rss-portlet-subscriptions") ? contentLinks.getContentEditLink() : 
-				"javascript:Liferay.Util.openWindow({id: '" + renderResponse.getNamespace() + "editAsset', " + 
-				"title: '" + LanguageUtil.format(pageContext, "edit-x", HtmlUtil.escape(contentLinks.getContentTitle())) + "', " + 
-				"uri:'" + HtmlUtil.escapeURL(contentLinks.getContentEditLink()) + "'});";
-%>
-							<liferay-ui:icon
-								image="edit"
-								label="<%= true %>"
-								message="<%= contentLinks.getContentTitle() %>"
-								target='<%= contentType.equals("rss-portlet-subscriptions") ? "_blank" : null %>'
-								url="<%= editUrl %>"
-							/>
-<%
-		}
-		else {
-%>
-							<%= HtmlUtil.escape(contentLinks.getContentTitle()) %>
-<%
-		}
-%>
-						</td>
-					</tr>
-<%
 		for (String link : contentLinks.getLinks()) {
 
-			rowAlt = !rowAlt;
+			//rowAlt = !rowAlt;
 			String linkShort = (link.length() > 150 ? link.substring(0, 150) + "..." : link);
 
 			if (link.startsWith("//")) {
@@ -133,6 +116,36 @@ boolean rowAlt = true;
 							<div class="link-scanner-result link-scanner-unchecked" title="" data-link="<%= link %>" data-isportal="<%= LinkScannerUtil.isPortalLink(link, themeDisplay) %>"></div>
 						</td>
 						<td class="table-cell align-left col-2 last valign-middle" colspan="1" headers="<portlet:namespace/>SearchContainer_col-title-link">
+		
+						
+						<%
+								if (contentType.equals("rss-portlet-subscriptions") || 
+									permissionChecker.hasPermission(
+									scopeGroupId, contentLinks.getClassName(),
+									contentLinks.getClassPK(), "UPDATE")) {
+						
+									String editUrl = contentType.equals("rss-portlet-subscriptions") ? contentLinks.getContentEditLink() : 
+										"javascript:Liferay.Util.openWindow({id: '" + renderResponse.getNamespace() + "editAsset', " + 
+										"title: '" + LanguageUtil.format(pageContext, "edit-x", HtmlUtil.escape(contentLinks.getContentTitle())) + "', " + 
+										"uri:'" + HtmlUtil.escapeURL(contentLinks.getContentEditLink()) + "'});";
+						%>
+													<liferay-ui:icon
+														image="edit"
+														label="<%= true %>"
+														message="<%= contentLinks.getContentTitle() %>"
+														target='<%= contentType.equals("rss-portlet-subscriptions") ? "_blank" : null %>'
+														url="<%= editUrl %>"
+													/>
+						<%
+								}
+								else {
+						%>
+													<%= HtmlUtil.escape(contentLinks.getContentTitle()) %>
+						<%
+								}
+						%>						
+						
+							</br>
 							<a href="<%= link %>" target="_blank" class="link-scanner-link"><%= HtmlUtil.escape(linkShort) %></a>
 						</td>
 					</tr>
@@ -167,6 +180,14 @@ boolean rowAlt = true;
 									node.removeClass('link-scanner-success');
 									node.addClass('link-scanner-error');
 									node.attr('title','AJAX Failed');
+
+									linkErrorCount++;
+									document.getElementById('linkError').innerHTML = linkErrorCount;
+									scanCount--;
+									document.getElementById('scanCount').innerHTML = scanCount;
+									<% if (!linkError) {%>
+										node.ancestor('tr').setStyle('display', 'none');
+									<% } %>									
 								},
 								success: function(event, id, obj) {
 									pbIncrement();
@@ -174,6 +195,14 @@ boolean rowAlt = true;
 									node.removeClass('link-scanner-error');
 									node.addClass('link-scanner-success');
 									node.attr('title','AJAX Success');
+
+									linkSuccessCount++;
+									document.getElementById('linkSuccess').innerHTML = linkSuccessCount;
+									scanCount--;
+									document.getElementById('scanCount').innerHTML = scanCount;
+									<% if (!linkSuccess) {%>
+										node.ancestor('tr').setStyle('display', 'none');
+									<% } %>												
 								}
 							}
 						}
@@ -191,6 +220,14 @@ boolean rowAlt = true;
 									node.removeClass('link-scanner-success');
 									node.addClass('link-scanner-error');
 									node.attr('title','Web Service Request Failed');
+									
+									linkErrorCount++;
+									document.getElementById('linkError').innerHTML = linkErrorCount;
+									scanCount--;
+									document.getElementById('scanCount').innerHTML = scanCount;
+									<% if (!linkError) {%>
+										node.ancestor('tr').setStyle('display', 'none');
+									<% } %>									
 								},
 								success: function(event, id, obj) {
 									pbIncrement();
@@ -203,16 +240,40 @@ boolean rowAlt = true;
 											node.removeClass('link-scanner-error');
 											node.removeClass('link-scanner-redirect');
 											node.addClass('link-scanner-success');
+	
+											linkSuccessCount++;
+											document.getElementById('linkSuccess').innerHTML = linkSuccessCount;
+											scanCount--;
+											document.getElementById('scanCount').innerHTML = scanCount;
+											<% if (!linkSuccess) {%>
+												node.ancestor('tr').setStyle('display', 'none');
+											<% } %>												
 										} else if (response[0] >= 300 && response[0] < 400) {
 											node.removeClass('link-scanner-unchecked');
 											node.removeClass('link-scanner-error');
 											node.removeClass('link-scanner-success');
 											node.addClass('link-scanner-redirect');
+											
+											linkRedirectCount++;
+											document.getElementById('linkRedirect').innerHTML = linkRedirectCount;
+											scanCount--;
+											document.getElementById('scanCount').innerHTML = scanCount;
+											<% if (!linkRedirect) {%>
+												node.ancestor('tr').setStyle('display', 'none');
+											<% } %>													
 										} else {
 											node.removeClass('link-scanner-unchecked');
 											node.removeClass('link-scanner-success');
 											node.removeClass('link-scanner-redirect');
 											node.addClass('link-scanner-error');
+											
+											linkErrorCount++;							
+											document.getElementById('linkError').innerHTML = linkErrorCount;
+											scanCount--;
+											document.getElementById('scanCount').innerHTML = scanCount;
+											<% if (!linkError) {%>
+												node.ancestor('tr').setStyle('display', 'none');
+											<% } %>
 										}
 										node.attr('title','WS: ' + response[0] + ' - ' + response[1]);
 									} else {
@@ -221,6 +282,14 @@ boolean rowAlt = true;
 										node.removeClass('link-scanner-redirect');
 										node.addClass('link-scanner-error');
 										node.attr('title','WS: ' + exception);
+										
+										linkErrorCount++;			
+										document.getElementById('linkError').innerHTML = linkErrorCount;
+										scanCount--;
+										document.getElementById('scanCount').innerHTML = scanCount;
+										<% if (!linkError) {%>
+											node.ancestor('tr').setStyle('display', 'none');
+										<% } %>
 									}
 								}
 							}
@@ -237,6 +306,11 @@ boolean rowAlt = true;
 	var progressBarPercent = 0;
 	var progressBar
 	var userAgent = '<%= HtmlUtil.escapeJS(userAgent) %>';
+	
+	var linkErrorCount = 0;
+	var linkRedirectCount = 0;
+	var linkSuccessCount = 0;
+	var scanCount = <%= scanCount %>;
 	
 	function pbIncrement() {
 		++progressBarCount;
