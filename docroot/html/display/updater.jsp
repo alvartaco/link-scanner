@@ -35,7 +35,7 @@ if (useBrowserAgent)
 
 String scanType = LinkScannerConstants.linkImagesLabel(true, false);
 
-List<ContentLinks> _contentLinksList = LinkScannerUtil.getContentLinks(contentType, scopeGroupId, liferayPortletRequest, liferayPortletResponse, themeDisplay, true, false);
+List<ContentLinks> _contentLinksList = (new LinkScannerUtil()).getContentLinks(contentType, scopeGroupId, liferayPortletRequest, liferayPortletResponse, themeDisplay, true, false);
 List<ContentLinks> contentLinksList = new ArrayList<ContentLinks>();
 
 for (ContentLinks _contentLinks : _contentLinksList) {
@@ -168,7 +168,7 @@ for (ContentLinks _contentLinks : _contentLinksList) {
 }
 
 if(!scanLinks){
-	contentLinksList = LinkScannerUtil.replaceContentLinks(contentType, scopeGroupId, liferayPortletRequest, liferayPortletResponse, themeDisplay, true, false, relativeOriginalUrl, relativeNewUrl, contentLinksList, originalUrlPD, newUrlPD);
+	contentLinksList = new LinkScannerUtil().replaceContentLinks(contentType, scopeGroupId, liferayPortletRequest, liferayPortletResponse, themeDisplay, true, false, relativeOriginalUrl, relativeNewUrl, contentLinksList, originalUrlPD, newUrlPD);
 }
 
 int scanCount = 0;
@@ -283,7 +283,7 @@ for (ContentLinks contentLinks : contentLinksList) {
 			%>
 					<tr class="link-scanner-row-link results-row portlet-section-body">
 						<td class="table-cell align-left col-1 first valign-middle" colspan="1" headers="<portlet:namespace/>SearchContainer_col-result">
-							<div class="link-scanner-result link-scanner-unchecked" title="" data-link="<%= link %>" data-isportal="<%= LinkScannerUtil.isPortalLink(link, themeDisplay) %>"></div>
+							<div class="link-scanner-result link-scanner-unchecked" title="" data-link="<%= link %>" data-isportal="<%= new LinkScannerUtil().isPortalLink(link, themeDisplay) %>"></div>
 						</td>
 						<td class="table-cell align-left col-2 last valign-middle" colspan="1" headers="<portlet:namespace/>SearchContainer_col-title-link">
 							<a href="<%= link %>" target="_blank" class="link-scanner-link"><%= HtmlUtil.escape(linkShort) %></a>

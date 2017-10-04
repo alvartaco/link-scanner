@@ -13,7 +13,7 @@ if (useBrowserAgent)
 
 String scanType = LinkScannerConstants.linkImagesLabel(scanLinks, scanImages);
 
-List<ContentLinks> contentLinksList = LinkScannerUtil.getContentLinks(contentType, scopeGroupId, liferayPortletRequest, liferayPortletResponse, themeDisplay, scanLinks, scanImages);
+List<ContentLinks> contentLinksList = (new LinkScannerUtil()).getContentLinks(contentType, scopeGroupId, liferayPortletRequest, liferayPortletResponse, themeDisplay, scanLinks, scanImages);
 
 int scanCount = 0;
 
@@ -130,7 +130,7 @@ boolean rowAlt = true;
 %>
 					<tr class="link-scanner-row-link results-row <%= (rowAlt?"portlet-section-alternate alt":"portlet-section-body") %>">
 						<td class="table-cell align-left col-1 first valign-middle" colspan="1" headers="<portlet:namespace/>SearchContainer_col-result">
-							<div class="link-scanner-result link-scanner-unchecked" title="" data-link="<%= link %>" data-isportal="<%= LinkScannerUtil.isPortalLink(link, themeDisplay) %>"></div>
+							<div class="link-scanner-result link-scanner-unchecked" title="" data-link="<%= link %>" data-isportal="<%= new LinkScannerUtil().isPortalLink(link, themeDisplay) %>"></div>
 						</td>
 						<td class="table-cell align-left col-2 last valign-middle" colspan="1" headers="<portlet:namespace/>SearchContainer_col-title-link">
 							<a href="<%= link %>" target="_blank" class="link-scanner-link"><%= HtmlUtil.escape(linkShort) %></a>

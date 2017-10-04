@@ -8,7 +8,7 @@ String back = "javascript:history.go(-1);";
 String headerTitle = "TEST";
 
 List<ContentLinks> contentLinksList = new ArrayList<ContentLinks>();
-contentLinksList = LinkScannerUtil.searchAndReplaceLinksInWebContent(scopeGroupId, liferayPortletRequest, liferayPortletResponse, themeDisplay, originalUrl, newUrl, "", "");
+contentLinksList = new LinkScannerUtil().searchAndReplaceLinksInWebContent(scopeGroupId, liferayPortletRequest, liferayPortletResponse, themeDisplay, originalUrl, newUrl, "", "");
 %>
 
 <liferay-ui:header

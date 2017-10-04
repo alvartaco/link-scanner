@@ -1,8 +1,8 @@
 <%@ include file="/html/init.jsp" %>
 
 <%
-Set<String> portalURLPrefixes = LinkScannerUtil.getPortalURLPrefixes(themeDisplay);
-String[] portalURLPrefixesAdd = LinkScannerUtil.getPortalURLPrefixesAdd(company.getCompanyId());
+Set<String> portalURLPrefixes = new LinkScannerUtil().getPortalURLPrefixes(themeDisplay);
+String[] portalURLPrefixesAdd = new LinkScannerUtil().getPortalURLPrefixesAdd(company.getCompanyId());
 %>
 
 <liferay-portlet:renderURL portletConfiguration="true" var="portletURL">

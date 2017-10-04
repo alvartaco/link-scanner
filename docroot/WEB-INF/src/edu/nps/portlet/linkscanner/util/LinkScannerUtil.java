@@ -1,5 +1,20 @@
 package edu.nps.portlet.linkscanner.util;
 
+import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+
+import javax.portlet.PortletPreferences;
+import javax.portlet.PortletRequest;
+import javax.portlet.PortletURL;
+
 import com.liferay.calendar.model.Calendar;
 import com.liferay.calendar.model.CalendarBooking;
 import com.liferay.calendar.service.CalendarBookingLocalServiceUtil;
@@ -37,8 +52,8 @@ import com.liferay.portlet.bookmarks.model.BookmarksEntry;
 import com.liferay.portlet.bookmarks.service.BookmarksEntryLocalServiceUtil;
 import com.liferay.portlet.dynamicdatamapping.util.DDMXMLUtil;
 import com.liferay.portlet.journal.model.JournalArticle;
-import com.liferay.portlet.journalcontent.util.JournalContentUtil;
 import com.liferay.portlet.journal.service.JournalArticleLocalServiceUtil;
+import com.liferay.portlet.journalcontent.util.JournalContentUtil;
 import com.liferay.portlet.messageboards.model.MBMessage;
 import com.liferay.portlet.messageboards.service.MBMessageLocalServiceUtil;
 import com.liferay.portlet.wiki.model.WikiNode;
@@ -47,24 +62,9 @@ import com.liferay.portlet.wiki.service.WikiNodeLocalServiceUtil;
 import com.liferay.portlet.wiki.service.WikiPageLocalServiceUtil;
 import com.liferay.util.HTMLParser;
 
-import java.io.IOException;
-import java.io.StringReader;
-import java.io.Reader;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-
-import javax.portlet.PortletPreferences;
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
-
 public class LinkScannerUtil {
 
-	public static Set<String> getPortalURLPrefixes(ThemeDisplay themeDisplay)
+	public Set<String> getPortalURLPrefixes(ThemeDisplay themeDisplay)
 		throws SystemException, PortalException {
 
 		Set<String> portalURLPrefixes = new HashSet<String>();
@@ -81,7 +81,7 @@ public class LinkScannerUtil {
 		return portalURLPrefixes;
 	}
 
-	public static String[] getPortalURLPrefixesAdd(long companyId) 
+	public String[] getPortalURLPrefixesAdd(long companyId) 
 		throws SystemException, PortalException {
 
 		PortletPreferences preferences = getPreferences(companyId);
@@ -89,7 +89,7 @@ public class LinkScannerUtil {
 		return preferences.getValues("portalURLPrefixesAdd", new String[0]);
 	}
 
-	public static PortletPreferences getPreferences(long companyId) 
+	public PortletPreferences getPreferences(long companyId) 
 		throws SystemException, PortalException {
 
 		int ownerType = PortletKeys.PREFS_OWNER_TYPE_COMPANY;
@@ -100,7 +100,7 @@ public class LinkScannerUtil {
 
 	}
 
-	public static List<ContentLinks> getContentLinks(
+	public List<ContentLinks> getContentLinks(
 			String contentType, long groupId, 
 			LiferayPortletRequest liferayPortletRequest,
 			LiferayPortletResponse liferayPortletResponse,
@@ -135,7 +135,7 @@ public class LinkScannerUtil {
 		}
 	}
 
-	public static List<ContentLinks> replaceContentLinks(
+	public List<ContentLinks> replaceContentLinks(
 			String contentType, long groupId, 
 			LiferayPortletRequest liferayPortletRequest,
 			LiferayPortletResponse liferayPortletResponse,
@@ -157,7 +157,7 @@ public class LinkScannerUtil {
 		}
 	}	
 	
-	public static List<ContentLinks> searchAndReplaceLinksInWebContent(
+	public List<ContentLinks> searchAndReplaceLinksInWebContent(
 			long groupId, 
 			LiferayPortletRequest liferayPortletRequest,
 			LiferayPortletResponse liferayPortletResponse,
@@ -172,7 +172,7 @@ public class LinkScannerUtil {
 		String contentType = "web-content";
 		
 		// All Webcontents that have links
-		List<ContentLinks> _contentLinksList = LinkScannerUtil.getContentLinks(contentType, groupId, liferayPortletRequest, liferayPortletResponse, themeDisplay, true, false);
+		List<ContentLinks> _contentLinksList = (new LinkScannerUtil()).getContentLinks(contentType, groupId, liferayPortletRequest, liferayPortletResponse, themeDisplay, true, false);
 		
 		// It will contain the Webcontents with the specified URL to be replaces
 		List<ContentLinks> contentLinksList = new ArrayList<ContentLinks>();
@@ -200,7 +200,7 @@ public class LinkScannerUtil {
 	}	
 		
 	
-	public static List<ContentLinks> getBlogLinks(
+	public List<ContentLinks> getBlogLinks(
 			long groupId, 
 			LiferayPortletRequest liferayPortletRequest,
 			LiferayPortletResponse liferayPortletResponse,
@@ -262,7 +262,7 @@ public class LinkScannerUtil {
 		return contentLinksList;
 	}
 
-	public static List<ContentLinks> getBookmarkLinks(
+	public List<ContentLinks> getBookmarkLinks(
 			long groupId, 
 			LiferayPortletRequest liferayPortletRequest,
 			LiferayPortletResponse liferayPortletResponse,
@@ -316,7 +316,7 @@ public class LinkScannerUtil {
 		return contentLinksList;
 	}
 
-	public static List<ContentLinks> getCalendarLinks(
+	public List<ContentLinks> getCalendarLinks(
 			long groupId, 
 			LiferayPortletRequest liferayPortletRequest,
 			LiferayPortletResponse liferayPortletResponse,
@@ -382,7 +382,7 @@ public class LinkScannerUtil {
 		return contentLinksList;
 	}
 
-	public static List<ContentLinks> getMBMessageLinks(
+	public List<ContentLinks> getMBMessageLinks(
 			long groupId, 
 			LiferayPortletRequest liferayPortletRequest,
 			LiferayPortletResponse liferayPortletResponse,
@@ -449,7 +449,7 @@ public class LinkScannerUtil {
 	}
 
 	@SuppressWarnings("unchecked")
-	public static List<ContentLinks> getRSSPortletLinks(
+	public List<ContentLinks> getRSSPortletLinks(
 			long groupId, 
 			LiferayPortletRequest liferayPortletRequest,
 			LiferayPortletResponse liferayPortletResponse,
@@ -519,7 +519,7 @@ public class LinkScannerUtil {
 		return contentLinksList;
 	}
 
-	public static List<ContentLinks> getWebContentLinks(
+	public List<ContentLinks> getWebContentLinks(
 			long groupId, 
 			LiferayPortletRequest liferayPortletRequest,
 			LiferayPortletResponse liferayPortletResponse,
@@ -590,7 +590,7 @@ public class LinkScannerUtil {
 		return contentLinksList;
 	}
 
-	public static List<ContentLinks> replaceWebContentLinks(
+	public List<ContentLinks> replaceWebContentLinks(
 			long groupId, 
 			LiferayPortletRequest liferayPortletRequest,
 			LiferayPortletResponse liferayPortletResponse,
@@ -685,7 +685,7 @@ public class LinkScannerUtil {
 			return contentLinksList;
 		}
 	
-	public static List<ContentLinks> getWikiContentLinks(
+	public List<ContentLinks> getWikiContentLinks(
 			long groupId, 
 			LiferayPortletRequest liferayPortletRequest,
 			LiferayPortletResponse liferayPortletResponse,
@@ -755,7 +755,7 @@ public class LinkScannerUtil {
 		return contentLinksList;
 	}
 
-	public static String getLayoutURL(ThemeDisplay themeDisplay, Layout layout) {
+	public String getLayoutURL(ThemeDisplay themeDisplay, Layout layout) {
 
 		String url = "";
 
@@ -776,7 +776,7 @@ public class LinkScannerUtil {
 		return url;
 	}
 
-	public static boolean hasPermission(long groupId, String name, String primKey, String actionId, ThemeDisplay themeDisplay) {
+	public boolean hasPermission(long groupId, String name, String primKey, String actionId, ThemeDisplay themeDisplay) {
 		
 		PermissionChecker permissionChecker = themeDisplay.getPermissionChecker();
 		if (permissionChecker.hasPermission(
@@ -788,25 +788,25 @@ public class LinkScannerUtil {
 		return false;
 	}
 
-	public static boolean hasPermissionView(long groupId, ContentLinks contentLinks, ThemeDisplay themeDisplay) {
+	public boolean hasPermissionView(long groupId, ContentLinks contentLinks, ThemeDisplay themeDisplay) {
 		
 		return hasPermission(
 			groupId, contentLinks.getClassName(), contentLinks.getClassPK(), "VIEW", themeDisplay);
 	}
 
-	public static boolean hasPermissionView(long groupId, String name, String primKey, ThemeDisplay themeDisplay) {
+	public boolean hasPermissionView(long groupId, String name, String primKey, ThemeDisplay themeDisplay) {
 		
 		return hasPermission(
 			groupId, name, primKey, "VIEW", themeDisplay);
 	}
 
-	public static boolean hasPermissionView(long groupId, String name, long primKey, ThemeDisplay themeDisplay) {
+	public boolean hasPermissionView(long groupId, String name, long primKey, ThemeDisplay themeDisplay) {
 		
 		return hasPermission(
 			groupId, name, String.valueOf(primKey), "VIEW", themeDisplay);
 	}
 
-	public static boolean isPortalLink(String url, ThemeDisplay themeDisplay)
+	public boolean isPortalLink(String url, ThemeDisplay themeDisplay)
 		throws SystemException, PortalException {
 
 		if (url.startsWith("//" + themeDisplay.getServerName()))
@@ -822,7 +822,7 @@ public class LinkScannerUtil {
 		return false;
 	}
 
-	public static List<String> parseLinks(String content, boolean getLinks, boolean getImages)
+	public List<String> parseLinks(String content, boolean getLinks, boolean getImages)
 		throws IOException {
 
 		List<String> links = new ArrayList<String>();
@@ -841,7 +841,7 @@ public class LinkScannerUtil {
 		return links;
 	}
 
-	private static void cleanLinks(List<String> links) {
+	private void cleanLinks(List<String> links) {
 
 		Iterator<String> linksIterator = links.iterator();
 
@@ -858,6 +858,6 @@ public class LinkScannerUtil {
 		}
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(LinkScannerUtil.class);
+	private Log _log = LogFactoryUtil.getLog(LinkScannerUtil.class);
 
 }
