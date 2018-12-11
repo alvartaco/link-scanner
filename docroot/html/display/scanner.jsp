@@ -53,27 +53,34 @@ boolean rowAlt = false;
 			<div id="linkScannerProgressBarContainer">
 				<div class="linkScannerProgressBar"></div>
 			</div>
-
+			
+			<textarea rows="5" cols="200" name="csv" id="textarea" style="display: none;"></textarea>
+			
+			<div id="textareatable" style="display: none;"></div>
+			
 			<liferay-ui:panel collapsible="<%= true %>" extended="<%= true %>" id="linkScannerOptions" persistState="<%= true %>" title="options">
 				<liferay-ui:message key="result-hover-description" />
 				</br>
 				<div class="link-scanner-legend-counter">
 					<strong>&nbsp;</strong></br>
 					<div id="scanCount"><%=scanCount%></div>
-					<div id="linkSuccess">0</div>
-					<div id="linkRedirect">0</div>
+					<div id="linkSuccess" style="display:none;" >0</div>
+					<div id="linkRedirect" style="display:none;" >0</div>
 					<div id="linkError">0</div>
 				</div>				
 				
 				<div class="link-scanner-legend-right">
 					<strong>Legend</strong>
 					<div class="link-scanner-result-legend link-scanner-unchecked"><liferay-ui:message key="link-unchecked" /></div>
-					<div class="link-scanner-result-legend link-scanner-success"><liferay-ui:message key="link-success" /></div>
-					<div class="link-scanner-result-legend link-scanner-redirect"><liferay-ui:message key="link-redirect" /></div>
+					<div class="link-scanner-result-legend link-scanner-success" style="display:none;" ><liferay-ui:message key="link-success" /></div>
+					<div class="link-scanner-result-legend link-scanner-redirect" style="display:none;" ><liferay-ui:message key="link-redirect" /></div>
 					<div class="link-scanner-result-legend link-scanner-error"><liferay-ui:message key="link-error" /></div>
 					
 				</div>
 			</liferay-ui:panel>
+						
+			<button type="button" id="convert" onclick="convert();" disabled="true"><liferay-ui:message key="export-to-CSV" /></button>
+			
 		</div>
 	</div>
 
@@ -95,11 +102,8 @@ boolean rowAlt = false;
 <%
 	for (ContentLinks contentLinks : contentLinksList) {
 
-		//rowAlt = !rowAlt;
-
 		for (String link : contentLinks.getLinks()) {
-
-			//rowAlt = !rowAlt;
+		
 			String linkShort = (link.length() > 150 ? link.substring(0, 150) + "..." : link);
 
 			if (link.startsWith("//")) {
@@ -110,10 +114,28 @@ boolean rowAlt = false;
 					
 				}
 			}
-%>
+
+			String editUrl = "";
+			String editUrlUri = "";
+			String editUrlUriNotScaped = "";
+			
+			if (contentType.equals("rss-portlet-subscriptions") || 
+				permissionChecker.hasPermission(
+				scopeGroupId, contentLinks.getClassName(),
+				contentLinks.getClassPK(), "UPDATE")) {
+	
+				editUrlUriNotScaped = contentLinks.getContentEditLink();
+				editUrlUri = HtmlUtil.escapeURL(editUrlUriNotScaped);
+				
+				editUrl = contentType.equals("rss-portlet-subscriptions") ? contentLinks.getContentEditLink() : 
+					"javascript:Liferay.Util.openWindow({id: '" + renderResponse.getNamespace() + "editAsset', " + 
+					"title: '" + LanguageUtil.format(pageContext, "edit-x", HtmlUtil.escape(contentLinks.getContentTitle())) + "', " + 
+					"uri:'" + editUrlUri + "'});";
+			}
+			%>
 					<tr class="link-scanner-row-link results-row <%= (rowAlt?"portlet-section-alternate alt":"portlet-section-body") %>">
 						<td class="table-cell align-left col-1 first valign-middle" colspan="1" headers="<portlet:namespace/>SearchContainer_col-result">
-							<div class="link-scanner-result link-scanner-unchecked" title="" data-link="<%= link %>" data-isportal="<%= new LinkScannerUtil().isPortalLink(link, themeDisplay) %>"></div>
+							<div class="link-scanner-result link-scanner-unchecked" title="" data-edit-url-uri-not-scaped="<%= editUrlUriNotScaped %>" data-edit-url="<%= editUrl %>" data-link="<%= link %>" data-isportal="<%= new LinkScannerUtil().isPortalLink(link, themeDisplay) %>"></div>
 						</td>
 						<td class="table-cell align-left col-2 last valign-middle" colspan="1" headers="<portlet:namespace/>SearchContainer_col-title-link">
 		
@@ -123,11 +145,6 @@ boolean rowAlt = false;
 									permissionChecker.hasPermission(
 									scopeGroupId, contentLinks.getClassName(),
 									contentLinks.getClassPK(), "UPDATE")) {
-						
-									String editUrl = contentType.equals("rss-portlet-subscriptions") ? contentLinks.getContentEditLink() : 
-										"javascript:Liferay.Util.openWindow({id: '" + renderResponse.getNamespace() + "editAsset', " + 
-										"title: '" + LanguageUtil.format(pageContext, "edit-x", HtmlUtil.escape(contentLinks.getContentTitle())) + "', " + 
-										"uri:'" + HtmlUtil.escapeURL(contentLinks.getContentEditLink()) + "'});";
 						%>
 													<liferay-ui:icon
 														image="edit"
@@ -159,6 +176,73 @@ boolean rowAlt = false;
 	</div>
 </div>
 
+<script>
+
+function convert() {
+    var tbl = "<table class='table table-responsive table-bordered table-striped'><tbody>"
+    var lines = document.getElementById("textarea").value.split("\n");
+    for (var i = 0; i < lines.length; i++) {
+      tbl = tbl + "<tr>"
+      var items = lines[i].split(",");
+      for (var j = 0; j < items.length; j++) {
+        tbl = tbl + "<td>" + items[j] + "</td>";
+      }
+      tbl = tbl + "</tr>";
+    }
+    tbl = tbl + "</tbody></table>";
+    var divTable = document.getElementById('textareatable');
+    divTable.innerHTML = tbl;
+    
+    export_table_to_csv("table.csv");
+  }
+
+function download_csv(csv, filename) {
+    var csvFile;
+    var downloadLink;
+
+    // CSV FILE
+    csvFile = new Blob([csv], {type: "text/csv"});
+
+    // Download link
+    downloadLink = document.createElement("a");
+
+    // File name
+    downloadLink.download = filename;
+
+    // We have to create a link to the file
+    downloadLink.href = window.URL.createObjectURL(csvFile);
+
+    // Make sure that the link is not displayed
+    downloadLink.style.display = "none";
+
+    // Add the link to your DOM
+    document.body.appendChild(downloadLink);
+
+    // Lanzamos
+    downloadLink.click();
+}
+
+function export_table_to_csv( filename) {
+	var csv = [];
+	var rows = document.getElementById('textareatable').querySelectorAll("table tr")
+	
+    for (var i = 0; i < rows.length; i++) {
+		var row = [], cols = rows[i].querySelectorAll("td, th");
+		
+        for (var j = 0; j < cols.length; j++) 
+            row.push(cols[j].innerText);
+        
+		csv.push(row.join(","));		
+	}
+
+    // Download CSV
+    download_csv(csv.join("\n"), filename);
+}
+
+
+
+</script>
+
 <aui:script>
 	Liferay.provide(
 		window,
@@ -178,16 +262,16 @@ boolean rowAlt = false;
 									pbIncrement();
 									node.removeClass('link-scanner-unchecked');
 									node.removeClass('link-scanner-success');
-									node.addClass('link-scanner-error');
+									node.removeClass('link-scanner-error');
+									node.removeClass('link-scanner-redirect');
+									node.addClass('link-scanner-alert');
 									node.attr('title','AJAX Failed');
 
 									linkErrorCount++;
 									document.getElementById('linkError').innerHTML = linkErrorCount;
 									scanCount--;
 									document.getElementById('scanCount').innerHTML = scanCount;
-									<% if (!linkError) {%>
-										node.ancestor('tr').setStyle('display', 'none');
-									<% } %>									
+									document.getElementById('textarea').value=document.getElementById('textarea').value + 'AJAX Failed' + ',' + node.attr('data-link') + ',' + node.attr('data-edit-url-uri-not-scaped') + '\n';
 								},
 								success: function(event, id, obj) {
 									pbIncrement();
@@ -224,10 +308,8 @@ boolean rowAlt = false;
 									linkErrorCount++;
 									document.getElementById('linkError').innerHTML = linkErrorCount;
 									scanCount--;
-									document.getElementById('scanCount').innerHTML = scanCount;
-									<% if (!linkError) {%>
-										node.ancestor('tr').setStyle('display', 'none');
-									<% } %>									
+									document.getElementById('scanCount').innerHTML = scanCount;	
+									document.getElementById('textarea').value=document.getElementById('textarea').value + 'Web Service Request Failed' + ',' + node.attr('data-link') + ',' + node.attr('data-edit-url-uri-not-scaped') + '\n';
 								},
 								success: function(event, id, obj) {
 									pbIncrement();
@@ -271,9 +353,7 @@ boolean rowAlt = false;
 											document.getElementById('linkError').innerHTML = linkErrorCount;
 											scanCount--;
 											document.getElementById('scanCount').innerHTML = scanCount;
-											<% if (!linkError) {%>
-												node.ancestor('tr').setStyle('display', 'none');
-											<% } %>
+											document.getElementById('textarea').value=document.getElementById('textarea').value + 'ERROR' + ',' + node.attr('data-link') + ',' + node.attr('data-edit-url-uri-not-scaped') + '\n';
 										}
 										node.attr('title','WS: ' + response[0] + ' - ' + response[1]);
 									} else {
@@ -287,9 +367,7 @@ boolean rowAlt = false;
 										document.getElementById('linkError').innerHTML = linkErrorCount;
 										scanCount--;
 										document.getElementById('scanCount').innerHTML = scanCount;
-										<% if (!linkError) {%>
-											node.ancestor('tr').setStyle('display', 'none');
-										<% } %>
+										document.getElementById('textarea').value=document.getElementById('textarea').value + 'WS: ' + exception + ',' + node.attr('data-link') + ',' + node.attr('data-edit-url-uri-not-scaped') + '\n';
 									}
 								}
 							}
@@ -317,6 +395,9 @@ boolean rowAlt = false;
 		progressBarPercent = (progressBarCount / progressBarTotal) * 100;
 		progressBar.set('label', 'Scanning... ' + Math.round(progressBarPercent) + '%');
 		progressBar.set('value', Math.round(progressBarPercent));
+		if (Math.round(progressBarPercent)>90){
+			document.getElementById("convert").disabled=false;
+		}
 	}
 	
 	AUI().ready('aui-tooltip', 
