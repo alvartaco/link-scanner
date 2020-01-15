@@ -28,14 +28,14 @@
 		</aui:field-wrapper>
 
 		<aui:field-wrapper label="show">
-			<div class="link-scanner-result-legend link-scanner-success">
-				<aui:input inlineLabel="right" name="link-success" type="checkbox" checked="<%= true %>" />
+			<div class="link-scanner-result-legend link-scanner-success" style="display:none;">
+				<aui:input inlineLabel="right" name="link-success" type="checkbox" checked="<%= false %>" />
 			</div>
-			<div class="link-scanner-result-legend link-scanner-redirect">
-				<aui:input inlineLabel="right" name="link-redirect" type="checkbox" checked="<%= true %>" />
+			<div class="link-scanner-result-legend link-scanner-redirect" style="display:none;">
+				<aui:input inlineLabel="right" name="link-redirect" type="checkbox" checked="<%= false %>" />
 			</div>
-			<div class="link-scanner-result-legend link-scanner-error">
-				<aui:input inlineLabel="right" name="link-error" type="checkbox" checked="<%= true %>" />
+			<div class="link-scanner-result-legend link-scanner-error" style="padding-left:0px;">
+				<aui:input inlineLabel="left" name="link-error" type="checkbox" style="display:none; " checked="<%= true %>" />
 			</div>
 		</aui:field-wrapper>
 

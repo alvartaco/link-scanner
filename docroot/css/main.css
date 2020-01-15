@@ -29,6 +29,10 @@
 	background-image: url('../images/error.png');
 }
 
+.link-scanner-alert {
+	background-image: url('../images/alert.png');
+}
+
 #linkScannerProgressBarContainer {
 	clear: both;
 	max-width: 350px;
