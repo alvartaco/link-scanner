@@ -193,11 +193,11 @@ public class LinkScannerURLStatusLocalServiceImpl
 				}
 			}
 			catch(UnknownHostException unknownHostException){
-				result[1] = "UnknownHostExceptiont. - URL : " + URLName;	
+				result[1] = "UnknownHostExceptiont. " + unknownHostException.getMessage() + " - URL : " + URLName;	
 				_log.error(result[1]);
 			}
 			catch (Exception e) {
-				result[1] = "Exception. - URL : " + URLName + " returned " + e.getMessage() ;
+				result[1] = "Exception. " + e.getMessage() + " - URL : " + URLName;
 				_log.error(result[1]);
 			} finally {
 				if (conn != null) {
