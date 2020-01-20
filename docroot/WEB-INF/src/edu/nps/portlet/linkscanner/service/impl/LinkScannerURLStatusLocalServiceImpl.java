@@ -127,7 +127,7 @@ public class LinkScannerURLStatusLocalServiceImpl
 			result[2] = "";
 
 			if (redirectionTryLimit == LinkScannerConstants.REDIRECTION_TRY_LIMIT) {
-				result[1] = "URL : " + URLName + " Redirection is reaching limit. WSgetResponse.";			
+				result[1] = "Redirection is reaching limit. - URL : " + URLName ;			
 				_log.error(result[1]);
 					
 				return result;
@@ -142,7 +142,7 @@ public class LinkScannerURLStatusLocalServiceImpl
 				
 				// Check if URL string is valid
 				if (!Validator.isUrl(URLName)) {
-					result[1] = "URL : " + URLName + " is not a valid URL. WSgetResponse.";			
+					result[1] = "NOT a valid URL. - URL : " + URLName;			
   					_log.error(result[1]);
   					
   					return result;
@@ -180,7 +180,7 @@ public class LinkScannerURLStatusLocalServiceImpl
 					
 					if (conn.getResponseCode() == HttpURLConnection.HTTP_BAD_METHOD) {
 						
-						result[1] = "URL : " + URLName + " returned HTTP 405 Bad Method. WSgetResponse.";	
+						result[1] = "HTTP 405 Bad Method. - URL : " + URLName ;	
 	  					_log.error(result[1]);
 	  					
 	  					if (conn != null) {
@@ -193,11 +193,11 @@ public class LinkScannerURLStatusLocalServiceImpl
 				}
 			}
 			catch(UnknownHostException unknownHostException){
-				result[1] = "URL : " + URLName + " returned UnknownHostExceptiont. WSgetResponse.";	
+				result[1] = "UnknownHostExceptiont. - URL : " + URLName;	
 				_log.error(result[1]);
 			}
 			catch (Exception e) {
-				result[1] = "URL : " + URLName + " returned " + e.getMessage() + " WSgetResponse.";
+				result[1] = "Exception. - URL : " + URLName + " returned " + e.getMessage() ;
 				_log.error(result[1]);
 			} finally {
 				if (conn != null) {
