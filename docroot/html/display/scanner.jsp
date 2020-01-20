@@ -103,12 +103,12 @@ boolean rowAlt = false;
 	for (ContentLinks contentLinks : contentLinksList) {
 
 		for (String link : contentLinks.getLinks()) {
-		
-			String linkShort = (link.length() > 150 ? link.substring(0, 150) + "..." : link);
 
-			if (link.startsWith("//")) {
+			String linkOri = link;
+
+			if (link.startsWith("/")) {
 				try {
-					link = themeDisplay.getURLPortal().substring(0, themeDisplay.getURLPortal().indexOf("//")) + link;
+					link = themeDisplay.getURLPortal() + link;
 				}
 				catch (Exception e) {
 					
@@ -163,7 +163,7 @@ boolean rowAlt = false;
 						%>						
 						
 							</br>
-							<a href="<%= link %>" target="_blank" class="link-scanner-link"><%= HtmlUtil.escape(linkShort) %></a>
+							<a href="<%= link %>" target="_blank" class="link-scanner-link"><%= HtmlUtil.escape(linkOri.length() > 150 ? linkOri.substring(0, 150) + "..." : linkOri) %></a>
 						</td>
 					</tr>
 <%
@@ -253,6 +253,7 @@ function export_table_to_csv( filename) {
 			var links = A.all('.link-scanner-result');
 
 			links.each(function (node) {
+				/*
 				if (node.attr('data-isportal') == 'true') {
 					A.io.request(
 						node.attr('data-link'),
@@ -292,9 +293,11 @@ function export_table_to_csv( filename) {
 						}
 					);
 				} else {
+				*/	
 					encodelink=encodeURIComponent(node.attr('data-link'));
+					var rnd = Math.random();
 					A.io.request(
-						'/api/jsonws/link-scanner-portlet.linkscannerurlstatus/get-response?p_auth=' + Liferay.authToken + '&url=' + encodelink + '&userAgent=' + userAgent,
+						'<%=themeDisplay.getURLPortal()%>/api/jsonws/link-scanner-portlet.linkscannerurlstatus/get-response?p_auth=' + Liferay.authToken + '&url=' + encodelink + '&userAgent=' + userAgent + '&rnd=' + rnd,
 						{
 							dataType: 'json',
 							on: {
@@ -344,16 +347,32 @@ function export_table_to_csv( filename) {
 												node.ancestor('tr').setStyle('display', 'none');
 											<% } %>													
 										} else {
-											node.removeClass('link-scanner-unchecked');
-											node.removeClass('link-scanner-success');
-											node.removeClass('link-scanner-redirect');
-											node.addClass('link-scanner-error');
-											
-											linkErrorCount++;							
-											document.getElementById('linkError').innerHTML = linkErrorCount;
-											scanCount--;
-											document.getElementById('scanCount').innerHTML = scanCount;
-											document.getElementById('textarea').value=document.getElementById('textarea').value + 'ERROR' + ',' + node.attr('data-link') + ',' + node.attr('data-edit-url-uri-not-scaped') + '\n';
+											if (response[0] == -1) {
+												
+												node.removeClass('link-scanner-unchecked');
+												node.removeClass('link-scanner-success');
+												node.removeClass('link-scanner-redirect');
+												node.addClass('link-scanner-error');
+												
+												linkErrorCount++;							
+												document.getElementById('linkError').innerHTML = linkErrorCount;
+												scanCount--;
+												document.getElementById('scanCount').innerHTML = scanCount;
+												document.getElementById('textarea').value=document.getElementById('textarea').value + 'ERROR WS: ' + response[0] + ' - ' + response[1] + ',' + node.attr('data-link') + ',' + node.attr('data-edit-url-uri-not-scaped') + '\n';
+											} else {
+												node.removeClass('link-scanner-unchecked');
+												node.removeClass('link-scanner-error');
+												node.removeClass('link-scanner-redirect');
+												node.addClass('link-scanner-success');
+		
+												linkSuccessCount++;
+												document.getElementById('linkSuccess').innerHTML = linkSuccessCount;
+												scanCount--;
+												document.getElementById('scanCount').innerHTML = scanCount;
+												<% if (!linkSuccess) {%>
+													node.ancestor('tr').setStyle('display', 'none');
+												<% } %>													
+											}
 										}
 										node.attr('title','WS: ' + response[0] + ' - ' + response[1]);
 									} else {
@@ -367,13 +386,13 @@ function export_table_to_csv( filename) {
 										document.getElementById('linkError').innerHTML = linkErrorCount;
 										scanCount--;
 										document.getElementById('scanCount').innerHTML = scanCount;
-										document.getElementById('textarea').value=document.getElementById('textarea').value + 'WS: ' + exception + ',' + node.attr('data-link') + ',' + node.attr('data-edit-url-uri-not-scaped') + '\n';
+										document.getElementById('textarea').value=document.getElementById('textarea').value + 'EXCEPTION WS: ' + exception + ',' + node.attr('data-link') + ',' + node.attr('data-edit-url-uri-not-scaped') + '\n';
 									}
 								}
 							}
 						}
 					);
-				}
+				//}
 			});
 		},
 		['aui-io']

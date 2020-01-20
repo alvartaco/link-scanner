@@ -14,6 +14,13 @@
 
 package edu.nps.portlet.linkscanner.service.impl;
 
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
+
+import javax.xml.bind.DatatypeConverter;
+
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
@@ -21,10 +28,7 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import edu.nps.portlet.linkscanner.service.base.LinkScannerURLStatusLocalServiceBaseImpl;
-
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.UnknownHostException;
+import edu.nps.portlet.linkscanner.util.LinkScannerConstants;
 
 /**
  * The implementation of the link scanner u r l status local service.
@@ -51,10 +55,16 @@ public class LinkScannerURLStatusLocalServiceImpl
 	public String[] getResponse(String url)
 					throws PortalException, SystemException {
 
-		return getResponse(url, null);
+		return getResponse(url, null, 0);
 	}
 
 	public String[] getResponse(String url, String userAgent)
+				throws PortalException, SystemException {
+	
+		return getResponse(url, userAgent, 0);
+	}
+	
+	public String[] getResponseOLD(String url, String userAgent)
 		throws PortalException, SystemException {
 
 		String[] result = new String[3];
@@ -108,6 +118,98 @@ public class LinkScannerURLStatusLocalServiceImpl
 		return result;
 	}
 
+	public String[] getResponse(String URLName, String userAgent, int redirectionTryLimit)
+			throws PortalException, SystemException {
+		
+			String[] result = new String[3];
+			result[0] = "-1";
+			result[1] = "Unknown Error";
+			result[2] = "";
+
+			if (redirectionTryLimit == LinkScannerConstants.REDIRECTION_TRY_LIMIT) {
+				result[1] = "URL : " + URLName + " Redirection is reaching limit. WSgetResponse.";			
+				_log.error(result[1]);
+					
+				return result;
+			}
+			
+			HttpURLConnection conn = null;
+			HttpURLConnection.setFollowRedirects(true);
+			
+			try {
+
+				////_log.info("Checking URL: " + URLName);
+				
+				// Check if URL string is valid
+				if (!Validator.isUrl(URLName)) {
+					result[1] = "URL : " + URLName + " is not a valid URL. WSgetResponse.";			
+  					_log.error(result[1]);
+  					
+  					return result;
+				}
+				
+				// Check if the URL is broken
+				URL url = new URL(URLName);
+				conn = (HttpURLConnection) url.openConnection();
+				conn.setRequestMethod("GET");
+				
+				if (Validator.isNotNull(userAgent)) {
+					conn.setRequestProperty("User-Agent",
+							"Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:66.0) Gecko/20100101 Firefox/66.0");
+				}
+				
+				if (LinkScannerConstants.IS_APACHE_AUTH_PROPERTY_EXISTS) {
+					conn.setRequestProperty("Authorization", "Basic " + 
+							DatatypeConverter.printBase64Binary(LinkScannerConstants.APACHE_AUTH_LOGIN.getBytes(StandardCharsets.UTF_8)));
+				}		
+				
+				conn.connect();
+				
+				////_log.info("Response code: " + conn.getResponseCode() + ". Message: " + conn.getResponseMessage());
+
+				String redirLink = conn.getHeaderField("Location");
+				if (redirLink != null && !url.toExternalForm().equals(redirLink)) {
+					////_log.info("Redirection link: " + redirLink);
+					redirectionTryLimit++;
+					result = getResponse(redirLink, userAgent, redirectionTryLimit);
+				} else {
+
+					result[0] = String.valueOf(conn.getResponseCode());
+					result[1] = conn.getResponseMessage();
+					result[2] = conn.getContentType();
+					
+					if (conn.getResponseCode() == HttpURLConnection.HTTP_BAD_METHOD) {
+						
+						result[1] = "URL : " + URLName + " returned HTTP 405 Bad Method. WSgetResponse.";	
+	  					_log.error(result[1]);
+	  					
+	  					if (conn != null) {
+	  						conn.disconnect();
+	  					}
+	  					
+	  					return result;
+	
+					}
+				}
+			}
+			catch(UnknownHostException unknownHostException){
+				result[1] = "URL : " + URLName + " returned UnknownHostExceptiont. WSgetResponse.";	
+				_log.error(result[1]);
+			}
+			catch (Exception e) {
+				result[1] = "URL : " + URLName + " returned " + e.getMessage() + " WSgetResponse.";
+				_log.error(result[1]);
+			} finally {
+				if (conn != null) {
+					conn.disconnect();
+				}
+			}
+			
+			////_log.info("OK Checking URL: " + URLName);
+			
+			return result;
+		}	
+	
 	public String getResponseCode(String url)
 		throws PortalException, SystemException {
 
