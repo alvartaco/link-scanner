@@ -127,3 +127,10 @@ String webContent = "web-content";
 		
 	}	
 </aui:script>
+
+<script>
+	var isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
+	if(!isFirefox){
+		alert("<liferay-ui:message key="please-use-firefox-for-this-plugin" />");
+	}
+</script>
