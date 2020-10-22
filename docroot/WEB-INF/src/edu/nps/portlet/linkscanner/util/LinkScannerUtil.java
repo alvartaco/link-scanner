@@ -64,6 +64,7 @@ import com.liferay.util.HTMLParser;
 
 public class LinkScannerUtil {
 
+	@SuppressWarnings("deprecation")
 	public Set<String> getPortalURLPrefixes(ThemeDisplay themeDisplay)
 		throws SystemException, PortalException {
 
@@ -213,6 +214,7 @@ public class LinkScannerUtil {
 
 		List<ContentLinks> contentLinksList = new ArrayList<ContentLinks>();
 
+		@SuppressWarnings("deprecation")
 		List<BlogsEntry> blogsEntryList = BlogsEntryLocalServiceUtil.getGroupEntries(groupId, WorkflowConstants.STATUS_APPROVED, QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 
 		PortletURL portletURL = liferayPortletResponse.createLiferayPortletURL(
