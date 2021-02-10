@@ -44,7 +44,7 @@
 		</aui:field-wrapper>
 
 		<aui:button-row>
-			<aui:button onClick='<%= renderResponse.getNamespace() + "extractLinks();" %>' value="process" />
+			<aui:button onClick='<%= renderResponse.getNamespace() + "extractLinks();" %>' value="list" />
 		</aui:button-row>
 
 	</aui:fieldset>

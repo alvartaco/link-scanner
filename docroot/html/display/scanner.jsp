@@ -54,7 +54,35 @@ boolean rowAlt = false;
 				<div class="linkScannerProgressBar"></div>
 			</div>
 			
-			<textarea rows="5" cols="200" name="csv" id="textarea" style="display: none;"></textarea>
+			<%
+				String textAreaText = "";
+				for (ContentLinks contentLinks : contentLinksList) {
+					for (String link : contentLinks.getLinks()) {
+						String linkOri = link;
+						if (link.startsWith("/")) {
+							try {
+								link = themeDisplay.getURLPortal() + link;
+							}
+							catch (Exception e) {
+							}
+						}
+						String editUrl = "";
+						String editUrlUri = "";
+						String editUrlUriNotScaped = "";
+						if (contentType.equals("rss-portlet-subscriptions") || 
+							permissionChecker.hasPermission(
+							scopeGroupId, contentLinks.getClassName(),
+							contentLinks.getClassPK(), "UPDATE")) {
+							editUrlUriNotScaped = contentLinks.getContentEditLink();
+							
+							textAreaText = textAreaText + link + "," + HtmlUtil.escape(contentLinks.getContentTitle()) + "," + editUrlUriNotScaped + "\n";
+						
+						}
+					}
+				}
+			%>						
+			
+			<textarea rows="5" cols="200" name="csv" id="textarea" style="display: none;"><%=textAreaText%></textarea>
 			
 			<div id="textareatable" style="display: none;"></div>
 			
@@ -78,7 +106,8 @@ boolean rowAlt = false;
 					
 				</div>
 			</liferay-ui:panel>
-						
+			
+			<button type="button" id="process" onclick="<portlet:namespace />scanLinks();" disabled="true"><liferay-ui:message key="process" /></button>			
 			<button type="button" id="convert" onclick="convert();" disabled="true"><liferay-ui:message key="export-to-CSV" /></button>
 			
 		</div>
@@ -244,56 +273,20 @@ function export_table_to_csv( filename) {
 </script>
 
 <aui:script>
+
+
 	Liferay.provide(
 		window,
 		'<portlet:namespace />scanLinks',
 		function() {
 			var A = AUI();
-
 			var links = A.all('.link-scanner-result');
-
+			document.getElementById('textarea').value='';
+			document.getElementById('textareatable').value='';
+			document.getElementById("process").disabled=true;
+			document.getElementById("convert").disabled=true;			
 			links.each(function (node) {
-				/*
-				if (node.attr('data-isportal') == 'true') {
-					A.io.request(
-						node.attr('data-link'),
-						{
-							on: {
-								failure: function(event, id, obj) {
-									pbIncrement();
-									node.removeClass('link-scanner-unchecked');
-									node.removeClass('link-scanner-success');
-									node.removeClass('link-scanner-error');
-									node.removeClass('link-scanner-redirect');
-									node.addClass('link-scanner-alert');
-									node.attr('title','AJAX Failed');
 
-									linkErrorCount++;
-									document.getElementById('linkError').innerHTML = linkErrorCount;
-									scanCount--;
-									document.getElementById('scanCount').innerHTML = scanCount;
-									document.getElementById('textarea').value=document.getElementById('textarea').value + 'AJAX Failed' + ',' + node.attr('data-link') + ',' + node.attr('data-edit-url-uri-not-scaped') + '\n';
-								},
-								success: function(event, id, obj) {
-									pbIncrement();
-									node.removeClass('link-scanner-unchecked');
-									node.removeClass('link-scanner-error');
-									node.addClass('link-scanner-success');
-									node.attr('title','AJAX Success');
-
-									linkSuccessCount++;
-									document.getElementById('linkSuccess').innerHTML = linkSuccessCount;
-									scanCount--;
-									document.getElementById('scanCount').innerHTML = scanCount;
-									<% if (!linkSuccess) {%>
-										node.ancestor('tr').setStyle('display', 'none');
-									<% } %>												
-								}
-							}
-						}
-					);
-				} else {
-				*/	
 					encodelink=encodeURIComponent(node.attr('data-link'));
 					var rnd = Math.random();
 					A.io.request(
@@ -392,7 +385,7 @@ function export_table_to_csv( filename) {
 							}
 						}
 					);
-				//}
+
 			});
 		},
 		['aui-io']
@@ -443,7 +436,8 @@ function export_table_to_csv( filename) {
 					value: progressBarCount
 				}
 			).render();
-	<portlet:namespace />scanLinks();
+			document.getElementById("process").disabled=false;
+			document.getElementById("convert").disabled=false;
 		}
 	);
 </aui:script>

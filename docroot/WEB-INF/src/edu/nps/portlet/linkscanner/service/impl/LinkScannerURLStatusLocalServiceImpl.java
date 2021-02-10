@@ -165,11 +165,10 @@ public class LinkScannerURLStatusLocalServiceImpl
 				
 				conn.connect();
 				
-				////_log.info("Response code: " + conn.getResponseCode() + ". Message: " + conn.getResponseMessage());
-
+				_log.info(URLName + " | Response code: " + conn.getResponseCode() + ". Message: " + conn.getResponseMessage());
 				String redirLink = conn.getHeaderField("Location");
 				if (redirLink != null && !url.toExternalForm().equals(redirLink)) {
-					////_log.info("Redirection link: " + redirLink);
+					_log.info("Redirection link: " + redirLink);
 					redirectionTryLimit++;
 					result = getResponse(redirLink, userAgent, redirectionTryLimit);
 				} else {
@@ -205,7 +204,7 @@ public class LinkScannerURLStatusLocalServiceImpl
 				}
 			}
 			
-			////_log.info("OK Checking URL: " + URLName);
+			_log.info("OK Checking URL: " + URLName);
 			
 			return result;
 		}	
