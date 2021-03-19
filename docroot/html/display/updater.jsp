@@ -11,11 +11,13 @@ boolean useBrowserAgent = ParamUtil.getBoolean(request, "use-browser-agent", tru
 
 java.net.URI uriOriginalUrl = new URI(originalUrl);
 String originalDomain = uriOriginalUrl.getHost();
+String originalPort = ""+uriOriginalUrl.getPort();
 String originalProtocol = originalUrl.toLowerCase().startsWith("http:")?"http://":"https://";
 String originalUrlPD = originalProtocol+originalDomain; 
 
 java.net.URI uriNewUrl = new URI(newUrl);
 String newDomain = uriNewUrl.getHost();
+String newPort = ""+uriNewUrl.getPort();
 String newProtocol = newUrl.toLowerCase().startsWith("http:")?"http://":"https://";
 String newUrlPD = newProtocol+newDomain; 
 
@@ -23,10 +25,10 @@ String back = "javascript:history.go(-1);";
 
 String headerTitle = contentType + "-" + (scanLinks ? "search" : "update");
 
-relativeOriginalUrl = originalUrl.replaceFirst(originalUrlPD, "");
+relativeOriginalUrl = originalUrl.replaceFirst(originalUrlPD, "").replaceFirst((":"+originalPort), "");
 
 if(!scanLinks) {
-	relativeNewUrl = newUrl.replaceFirst(newUrlPD, "");
+	relativeNewUrl = newUrl.replaceFirst(newUrlPD, "").replaceFirst((":"+newPort), "");
 }
 
 String userAgent = "null";

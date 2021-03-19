@@ -543,7 +543,35 @@ public class LinkScannerUtil {
 
 		portletURL.setWindowState(LiferayWindowState.POP_UP);
 		portletURL.setParameter("struts_action", "/journal/edit_article");
-
+		
+		/* Delete all versions method
+		_log.info(journalArticleList.size());
+		double latestVersion = 0;
+		for (JournalArticle journalArticle : journalArticleList) {
+			if(journalArticle!=null){
+				if (JournalArticleLocalServiceUtil.isLatestVersion(journalArticle.getGroupId(), journalArticle.getArticleId(), journalArticle.getVersion())) {
+					latestVersion = journalArticle.getVersion();
+					_log.info(latestVersion);
+				} else {
+					List<JournalArticle> versiones=JournalArticleLocalServiceUtil.getArticles(groupId,  journalArticle.getArticleId());
+					for (int j = 0; j < versiones.size(); j++) {
+					   JournalArticle version=versiones.get(j);
+					   if (latestVersion > 0 && (version.getVersion() < latestVersion )) {
+						   JournalArticleLocalServiceUtil.deleteArticle(groupId, version.getArticleId(), version.getVersion(), null,null);
+						   _log.info("deleted: " + version.getVersion());
+					   } else {
+						   _log.info("kept: " + latestVersion);
+					   }
+					}
+					_log.info(" ");
+					latestVersion = 0;
+				}
+			}
+		}
+		journalArticleList = JournalArticleLocalServiceUtil.getArticles(groupId);
+		_log.info(journalArticleList.size());
+		*/
+		
 		for (JournalArticle journalArticle : journalArticleList) {
 
 			if (!hasPermissionView(groupId, journalArticle.getModelClassName(), journalArticle.getPrimaryKey(), themeDisplay)) {
