@@ -38,6 +38,7 @@
 			<role-name>administrator</role-name>
 		</security-role-ref>
 	</portlet>
+	<!-- 
 	<portlet>
 		<portlet-name>linksupdater</portlet-name>
 		<display-name>Link Updater</display-name>
@@ -71,4 +72,5 @@
 			<role-name>administrator</role-name>
 		</security-role-ref>
 	</portlet>
+	 -->
 </portlet-app>
