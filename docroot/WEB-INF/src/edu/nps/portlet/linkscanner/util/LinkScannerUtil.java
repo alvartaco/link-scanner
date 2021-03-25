@@ -3,6 +3,7 @@ package edu.nps.portlet.linkscanner.util;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -107,7 +108,10 @@ public class LinkScannerUtil {
 			LiferayPortletResponse liferayPortletResponse,
 			ThemeDisplay themeDisplay, 
 			boolean getLinks,
-			boolean getImages)
+			boolean getImages,
+			String exactMatch,
+			String newUrl,
+			String newUrlPD)
 		throws Exception {
 
 		if (contentType.equals("blog-entries")) {
@@ -126,7 +130,7 @@ public class LinkScannerUtil {
 			return getRSSPortletLinks(groupId, liferayPortletRequest, liferayPortletResponse, themeDisplay, getLinks, getImages);
 		}
 		else if (contentType.equals("web-content")) {
-			return getWebContentLinks(groupId, liferayPortletRequest, liferayPortletResponse, themeDisplay, getLinks, getImages);
+			return getWebContentLinks(groupId, liferayPortletRequest, liferayPortletResponse, themeDisplay, getLinks, getImages, exactMatch, newUrl, newUrlPD);
 		}
 		else if (contentType.equals("wiki-pages")) {
 			return getWikiContentLinks(groupId, liferayPortletRequest, liferayPortletResponse, themeDisplay, getLinks, getImages);
@@ -147,17 +151,19 @@ public class LinkScannerUtil {
 			String newUrl,
 			List<ContentLinks> contentLinksList,
 			String originalUrlPD,
-			String newUrlPD
+			String newUrlPD,
+			String exactMatch
 			)
 		throws Exception {
 
 		if (contentType.equals("web-content")) {
-			return replaceWebContentLinks(groupId, liferayPortletRequest, liferayPortletResponse, themeDisplay, getLinks, getImages, originalUrl, newUrl, contentLinksList, originalUrlPD, newUrlPD);
+			return replaceWebContentLinks(groupId, liferayPortletRequest, liferayPortletResponse, themeDisplay, getLinks, getImages, originalUrl, newUrl, contentLinksList, originalUrlPD, newUrlPD, exactMatch);
 		} else {
 			return null;
 		}
 	}	
 	
+	/*
 	public List<ContentLinks> searchAndReplaceLinksInWebContent(
 			long groupId, 
 			LiferayPortletRequest liferayPortletRequest,
@@ -166,14 +172,15 @@ public class LinkScannerUtil {
 			String originalUrl,
 			String newUrl,
 			String originalUrlPD,
-			String newUrlPD
+			String newUrlPD,
+			String exactMatch
 			)
 		throws Exception {
 
 		String contentType = "web-content";
 		
 		// All Webcontents that have links
-		List<ContentLinks> _contentLinksList = (new LinkScannerUtil()).getContentLinks(contentType, groupId, liferayPortletRequest, liferayPortletResponse, themeDisplay, true, false);
+		List<ContentLinks> _contentLinksList = (new LinkScannerUtil()).getContentLinks(contentType, groupId, liferayPortletRequest, liferayPortletResponse, themeDisplay, true, false, exactMatch, originalUrl, originalUrlPD);
 		
 		// It will contain the Webcontents with the specified URL to be replaces
 		List<ContentLinks> contentLinksList = new ArrayList<ContentLinks>();
@@ -196,10 +203,10 @@ public class LinkScannerUtil {
 		}		
 		
 		//It replaces the URLS and returns the results replaced.
-		return replaceWebContentLinks(groupId, liferayPortletRequest, liferayPortletResponse, themeDisplay, true, false, originalUrl, newUrl, contentLinksList, originalUrlPD, newUrlPD);
+		return replaceWebContentLinks(groupId, liferayPortletRequest, liferayPortletResponse, themeDisplay, true, false, originalUrl, newUrl, contentLinksList, originalUrlPD, newUrlPD, exactMatch);
 
 	}	
-		
+	*/	
 	
 	public List<ContentLinks> getBlogLinks(
 			long groupId, 
@@ -527,7 +534,10 @@ public class LinkScannerUtil {
 			LiferayPortletResponse liferayPortletResponse,
 			ThemeDisplay themeDisplay, 
 			boolean getLinks,
-			boolean getImages)
+			boolean getImages,
+			String exactMatch,
+			String originalUrl,
+			String originalUrlPD)
 		throws Exception {
 
 		_log.debug("getWebContentLinks for groupId " + String.valueOf(groupId));
@@ -544,23 +554,26 @@ public class LinkScannerUtil {
 		portletURL.setWindowState(LiferayWindowState.POP_UP);
 		portletURL.setParameter("struts_action", "/journal/edit_article");
 		
-		/* Delete all versions method
+		//////////////////////////////
+		//Delete all versions method
+		/////////////////////////////
+		/*
 		_log.info(journalArticleList.size());
 		double latestVersion = 0;
 		for (JournalArticle journalArticle : journalArticleList) {
 			if(journalArticle!=null){
 				if (JournalArticleLocalServiceUtil.isLatestVersion(journalArticle.getGroupId(), journalArticle.getArticleId(), journalArticle.getVersion())) {
 					latestVersion = journalArticle.getVersion();
-					_log.info(latestVersion);
+					_log.info(journalArticle.getArticleId() + " -> " + latestVersion);
 				} else {
 					List<JournalArticle> versiones=JournalArticleLocalServiceUtil.getArticles(groupId,  journalArticle.getArticleId());
 					for (int j = 0; j < versiones.size(); j++) {
 					   JournalArticle version=versiones.get(j);
 					   if (latestVersion > 0 && (version.getVersion() < latestVersion )) {
 						   JournalArticleLocalServiceUtil.deleteArticle(groupId, version.getArticleId(), version.getVersion(), null,null);
-						   _log.info("deleted: " + version.getVersion());
+						   _log.info(journalArticle.getArticleId() + " -> " + "deleted: " + version.getVersion());
 					   } else {
-						   _log.info("kept: " + latestVersion);
+						   _log.info(journalArticle.getArticleId() + " -> " + "kept: " + latestVersion);
 					   }
 					}
 					_log.info(" ");
@@ -595,8 +608,9 @@ public class LinkScannerUtil {
 						portletURL.setParameter("groupId", String.valueOf(journalArticle.getGroupId()));
 						portletURL.setParameter("articleId", journalArticle.getArticleId());
 						portletURL.setParameter("version", String.valueOf(journalArticle.getVersion()));
-
+						
 						ContentLinks contentLinks = new ContentLinks();
+						contentLinks = new ContentLinks();
 						contentLinks.setClassName(journalArticle.getModelClassName());
 						contentLinks.setClassPK(journalArticle.getArticleId());
 						contentLinks.setContentTitle(journalArticle.getTitle(themeDisplay.getLocale()));
@@ -606,13 +620,41 @@ public class LinkScannerUtil {
 						
 						_log.debug("Extracting links from journal article " + journalArticle.getArticleId() + " - " + journalArticle.getTitle());
 						
-						for (String link : links) {
+						if(!Boolean.valueOf(exactMatch)) {
+							
+							for (String link : links) {
+								contentLinks.addLink(link);
+							}
+							
+							contentLinksList.add(contentLinks);
+							
+						} else {
 
-							contentLinks.addLink(link);
+							java.net.URI uriOriginalUrl = new URI(originalUrl);
+							String originalPort = ""+uriOriginalUrl.getPort();
+							String relativeOriginalUrl = originalUrl.replaceFirst(originalUrlPD, "").replaceFirst((":"+originalPort), "");
+														
+							for (String link : links) {
+								//if (link.contains("/agenda")){
+									if (!originalUrl.equals("") && link.equalsIgnoreCase(originalUrl) ||
+										!relativeOriginalUrl.equals("") && link.equalsIgnoreCase(relativeOriginalUrl)
+											) {
+										contentLinks.addLink(link);
+									}
+									if (!originalUrlPD.equals("") && link.equalsIgnoreCase(originalUrlPD)) {
+										contentLinks.addLink(link);
+									}	
+								//}	
+							}
+							
+							if (contentLinks!=null) {
+								contentLinksList.add(contentLinks);
+							}
 						}
 						
-						contentLinksList.add(contentLinks);
 					}
+						
+						//contentLinksList.add(contentLinks);
 				}
 			}
 		}
@@ -631,27 +673,64 @@ public class LinkScannerUtil {
 			String newUrl,
 			List<ContentLinks> _contentLinksList,
 			String originalUrlPD,
-			String newUrlPD
+			String newUrlPD,
+			String exactMatch
 			)
 			throws Exception {
 
 			_log.debug("repalceWebContentLinks for groupId " + String.valueOf(groupId));
 
 			List<ContentLinks> contentLinksList = new ArrayList<ContentLinks>();
-
+			
 			for (ContentLinks _contentLinks : _contentLinksList) {
 				JournalArticle journalArticle = JournalArticleLocalServiceUtil.getLatestArticle(groupId, _contentLinks.getClassPK());
 				String content = "";
+				JournalArticle _journalArticle = null;
+				boolean replaced = false;
 				if (JournalArticleLocalServiceUtil.isLatestVersion(journalArticle.getGroupId(), journalArticle.getArticleId(), journalArticle.getVersion())) {
 					content = JournalContentUtil.getContent(groupId, journalArticle.getArticleId(), null, null, themeDisplay.getLanguageId(), themeDisplay);
 					if (content != null) {
-						if (!newUrl.equals("")) {
-							content = content.replaceAll(originalUrl, newUrl);
-							//content = content;
+						replaced = false;
+						if(!Boolean.valueOf(exactMatch)) {
+							if (!newUrl.equals("")) {
+								content = content.replaceAll(originalUrl, newUrl);
+								replaced = true;
+								//content = content;
+							}
+							if (!originalUrlPD.equalsIgnoreCase(newUrlPD)) {
+								content = content.replaceAll(originalUrlPD, newUrlPD);
+								replaced = true;
+								//content = content;
+							}
+						} else {
+							for (String _link : _contentLinks.getLinks()) {
+								if (!newUrl.equals("") && _link.equalsIgnoreCase(originalUrl)) {
+									content = content.replaceFirst(originalUrl, newUrl);
+									replaced = true;
+									//content = content;
+								}
+								if (!originalUrlPD.equalsIgnoreCase(newUrlPD) && _link.equalsIgnoreCase(originalUrlPD)) {
+									content = content.replaceFirst(originalUrlPD, newUrlPD);
+									replaced = true;
+									//content = content;
+								}							
+							}
 						}
-						if (!originalUrlPD.equalsIgnoreCase(newUrlPD)) {
-							content = content.replaceAll(originalUrlPD, newUrlPD);
-							//content = content;
+											
+						if(replaced) {
+							String result = null;
+							Element rootElement = SAXReaderUtil.createElement("root");
+							Document contentDoc = SAXReaderUtil.createDocument(rootElement);
+							Element contentElement = SAXReaderUtil.createElement("static-content");
+							rootElement.add(contentElement);
+							contentElement.addText(content);
+							try {
+								result = DDMXMLUtil.formatXML(contentDoc);
+							} catch (Exception e) {            
+								e.printStackTrace();
+							}        
+							////++++++
+							_journalArticle = JournalArticleLocalServiceUtil.updateContent(groupId, journalArticle.getArticleId(), journalArticle.getVersion(), result);
 						}
 						
 						String result = null;
@@ -669,49 +748,49 @@ public class LinkScannerUtil {
 						JournalArticleLocalServiceUtil.updateContent(groupId, journalArticle.getArticleId(), journalArticle.getVersion(), result);
 					}
 				}
-				
-				PortletURL portletURL = liferayPortletResponse.createLiferayPortletURL(
-						PortalUtil.getControlPanelPlid(liferayPortletRequest), 
-						PortletKeys.JOURNAL,
-						PortletRequest.RENDER_PHASE);		
-				
-				portletURL.setWindowState(LiferayWindowState.POP_UP);
-				portletURL.setParameter("struts_action", "/journal/edit_article");
-				
-				//String content = JournalContentUtil.getContent(groupId, journalArticle.getArticleId(), null, null, themeDisplay.getLanguageId(), themeDisplay);
-
-				//if (content != null) {
-
-					List<String> links = parseLinks(content, getLinks, getImages);
-
-					if (links.size() > 0) {
-
-						portletURL.setParameter("groupId", String.valueOf(journalArticle.getGroupId()));
-						portletURL.setParameter("articleId", journalArticle.getArticleId());
-						portletURL.setParameter("version", String.valueOf(journalArticle.getVersion()));
-
-						ContentLinks contentLinks = new ContentLinks();
-						contentLinks.setClassName(journalArticle.getModelClassName());
-						contentLinks.setClassPK(journalArticle.getArticleId());
-						contentLinks.setContentTitle(journalArticle.getTitle(themeDisplay.getLocale()));
-						contentLinks.setContentEditLink(portletURL.toString());
-						contentLinks.setModifiedDate(journalArticle.getModifiedDate());
-						contentLinks.setStatus(journalArticle.getStatus());
-						
-						_log.debug("Extracting links from journal article " + journalArticle.getArticleId() + " - " + journalArticle.getTitle());
-						
-						for (String link : links) {
-							if (!newUrl.equals("") && link.toLowerCase().contains(newUrl.toLowerCase())) {
-								contentLinks.addLink(link);
-							} else if (link.toLowerCase().startsWith(newUrlPD.toLowerCase())) {
-								contentLinks.addLink(link);
+				if(replaced) {
+					PortletURL portletURL = liferayPortletResponse.createLiferayPortletURL(
+							PortalUtil.getControlPanelPlid(liferayPortletRequest), 
+							PortletKeys.JOURNAL,
+							PortletRequest.RENDER_PHASE);		
+					
+					portletURL.setWindowState(LiferayWindowState.POP_UP);
+					portletURL.setParameter("struts_action", "/journal/edit_article");
+					
+					//content = JournalContentUtil.getContent(groupId, journalArticle.getArticleId(), null, null, themeDisplay.getLanguageId(), themeDisplay);
+	
+					//if (content != null) {
+	
+						List<String> links = parseLinks(content, getLinks, getImages);
+	
+						if (links.size() > 0) {
+	
+							portletURL.setParameter("groupId", String.valueOf(_journalArticle.getGroupId()));
+							portletURL.setParameter("articleId", _journalArticle.getArticleId());
+							portletURL.setParameter("version", String.valueOf(_journalArticle.getVersion()));
+	
+							ContentLinks contentLinks = new ContentLinks();
+							contentLinks.setClassName(_journalArticle.getModelClassName());
+							contentLinks.setClassPK(_journalArticle.getArticleId());
+							contentLinks.setContentTitle(_journalArticle.getTitle(themeDisplay.getLocale()));
+							contentLinks.setContentEditLink(portletURL.toString());
+							contentLinks.setModifiedDate(journalArticle.getModifiedDate());
+							contentLinks.setStatus(_journalArticle.getStatus());
+							
+							_log.debug("Extracting links from journal article " + _journalArticle.getArticleId() + " - " + _journalArticle.getTitle());
+							
+							for (String link : links) {
+								if (!newUrl.equals("") && link.toLowerCase().contains(newUrl.toLowerCase())) {
+									contentLinks.addLink(link);
+								} else if (link.toLowerCase().startsWith(newUrlPD.toLowerCase())) {
+									contentLinks.addLink(link);
+								}
 							}
+							
+							contentLinksList.add(contentLinks);
 						}
-						
-						contentLinksList.add(contentLinks);
-					}
-				//}				
-			}
+					}				
+				}
 			return contentLinksList;
 		}
 	
@@ -891,3 +970,4 @@ public class LinkScannerUtil {
 	private Log _log = LogFactoryUtil.getLog(LinkScannerUtil.class);
 
 }
+

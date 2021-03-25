@@ -38,10 +38,9 @@
 			<role-name>administrator</role-name>
 		</security-role-ref>
 	</portlet>
-	<!-- 
 	<portlet>
 		<portlet-name>linksupdater</portlet-name>
-		<display-name>Link Updater</display-name>
+		<display-name>Link Finder</display-name>
 		<portlet-class>
 			edu.nps.portlet.linkscanner.DisplayPortlet
 		</portlet-class>
@@ -64,13 +63,12 @@
 		</supports>
 		<resource-bundle>content.Language</resource-bundle>
 		<portlet-info>
-			<title>Link Updater</title>
-			<short-title>Link Updater</short-title>
+			<title>Link Finder</title>
+			<short-title>Link Finder</short-title>
 			<keywords></keywords>
 		</portlet-info>
 		<security-role-ref>
 			<role-name>administrator</role-name>
 		</security-role-ref>
 	</portlet>
-	 -->
 </portlet-app>

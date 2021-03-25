@@ -5,10 +5,11 @@ String contentType = ParamUtil.getString(request, "content-type", "web-content")
 String originalUrl = ParamUtil.getString(request, "original_url", themeDisplay.getURLPortal());
 String newUrl = ParamUtil.getString(request, "new_url", themeDisplay.getURLPortal());
 boolean scanLinks = ParamUtil.getBoolean(request, "only_scan_links", true);
+boolean exactMatch = ParamUtil.getBoolean(request, "exact_match", true);
 String webContent = "web-content";
 %>
 
-<p><b><liferay-ui:message key="view-header-text" /></b></p>
+<p><b><liferay-ui:message key="FILL in the URL you are looking for..." /></b></p>
 <br/>
 
 <liferay-portlet:renderURL varImpl="extractLinksURL">
@@ -27,12 +28,13 @@ String webContent = "web-content";
 		<aui:input name="original_url" required="true" value="<%=originalUrl%>" style="width:50%;" >
 			<aui:validator name="url"/>
 		</aui:input>
+		<aui:input inlineLabel="right" label="Exact Match" name="exact_match" type="checkbox" checked="<%=exactMatch%>" />
 
-		<aui:input name="new_url" required="false" value="<%=newUrl%>" style="width:50%;" >
+		<aui:input type="hidden" name="new_url" required="false" value="<%=newUrl%>" style="width:50%;" >
 			<aui:validator name="url"/>
 		</aui:input>
 		
-		<aui:input inlineLabel="right" name="only_scan_links" type="checkbox" checked="<%=scanLinks%>" />
+		<aui:input inlineLabel="right" name="only_scan_links" type="checkbox" disabled="true" checked="true" />
 		
 		<aui:button-row>
 			<aui:button onClick='<%= renderResponse.getNamespace() + "extractLinks();" %>' value="process" />
@@ -59,7 +61,7 @@ String webContent = "web-content";
 		
 		var original_url_last_char = original_url.charAt(original_url.length-1);
 		var new_url_last_char = new_url.charAt(new_url.length-1);
-		
+
 		if (only_scan_links == "true"){
 			/*
 			if (original_url != server_url &&
@@ -72,7 +74,8 @@ String webContent = "web-content";
 			*/
 			
 			if (	original_url_last_char == "/"   ||
-					original_url == server_url+"?"	
+					original_url == server_url+"?"	||
+					original_url == server_url		
 				) {
 				alert("<liferay-ui:message key="please-complete-original-url" />");
 			} else {

@@ -6,7 +6,8 @@ String originalUrl = ParamUtil.getString(request, "original_url", "");
 String newUrl = ParamUtil.getString(request, "new_url", "");
 String relativeOriginalUrl = "";
 String relativeNewUrl = "";
-boolean scanLinks = ParamUtil.getBoolean(request, "only_scan_links", true);
+boolean scanLinks = true; //ParamUtil.getBoolean(request, "only_scan_links", true);
+boolean exactMatch = ParamUtil.getBoolean(request, "exact_match", true);
 boolean useBrowserAgent = ParamUtil.getBoolean(request, "use-browser-agent", true);
 
 java.net.URI uriOriginalUrl = new URI(originalUrl);
@@ -37,7 +38,7 @@ if (useBrowserAgent)
 
 String scanType = LinkScannerConstants.linkImagesLabel(true, false);
 
-List<ContentLinks> _contentLinksList = (new LinkScannerUtil()).getContentLinks(contentType, scopeGroupId, liferayPortletRequest, liferayPortletResponse, themeDisplay, true, false);
+List<ContentLinks> _contentLinksList = (new LinkScannerUtil()).getContentLinks(contentType, scopeGroupId, liferayPortletRequest, liferayPortletResponse, themeDisplay, true, false, String.valueOf(exactMatch), originalUrl, originalUrlPD);
 List<ContentLinks> contentLinksList = new ArrayList<ContentLinks>();
 
 for (ContentLinks _contentLinks : _contentLinksList) {
@@ -170,7 +171,7 @@ for (ContentLinks _contentLinks : _contentLinksList) {
 }
 
 if(!scanLinks){
-	contentLinksList = new LinkScannerUtil().replaceContentLinks(contentType, scopeGroupId, liferayPortletRequest, liferayPortletResponse, themeDisplay, true, false, relativeOriginalUrl, relativeNewUrl, contentLinksList, originalUrlPD, newUrlPD);
+	//contentLinksList = new LinkScannerUtil().replaceContentLinks(contentType, scopeGroupId, liferayPortletRequest, liferayPortletResponse, themeDisplay, true, false, relativeOriginalUrl, relativeNewUrl, contentLinksList, originalUrlPD, newUrlPD, String.valueOf(exactMatch));
 }
 
 int scanCount = 0;
@@ -236,42 +237,48 @@ for (ContentLinks contentLinks : contentLinksList) {
 
 <%
 	for (ContentLinks contentLinks : contentLinksList) {
-		
-		%>
-		<tr class="link-scanner-row-content results-row portlet-section-body">
-			<td class="table-cell align-left col-1 first valign-middle" colspan="1" headers="<portlet:namespace/>SearchContainer_col-result">&nbsp;</td>
-			<td class="table-cell align-left col-2 last valign-middle" colspan="1" headers="<portlet:namespace/>SearchContainer_col-title-link">
-			
-			<%
-			if (contentType.equals("rss-portlet-subscriptions") || 
-				permissionChecker.hasPermission(
-				scopeGroupId, contentLinks.getClassName(),
-				contentLinks.getClassPK(), "UPDATE")) {
-	
-				String editUrl = contentType.equals("rss-portlet-subscriptions") ? contentLinks.getContentEditLink() : 
-					"javascript:Liferay.Util.openWindow({id: '" + renderResponse.getNamespace() + "editAsset', " + 
-					"title: '" + LanguageUtil.format(pageContext, "edit-x", HtmlUtil.escape(contentLinks.getContentTitle())) + "', " + 
-					"uri:'" + HtmlUtil.escapeURL(contentLinks.getContentEditLink()) + "'});";
-			%>
-					<liferay-ui:icon
-						image="edit"
-						label="<%= true %>"
-						message="<%= contentLinks.getContentTitle() %>"
-						target='<%= contentType.equals("rss-portlet-subscriptions") ? "_blank" : null %>'
-						url="<%= editUrl %>"
-					/>
-			<%
-			} else {
-			%>
-					<%= HtmlUtil.escape(contentLinks.getContentTitle()) %>
-			<%
-			}
-			%>
-			</td>
-		</tr>
-		<%
-		for (String link : contentLinks.getLinks()) {
 
+		int linkCounter = 0;
+		for (String link : contentLinks.getLinks()) {
+			
+			if (linkCounter == 0) {
+				%>
+				<tr class="link-scanner-row-content results-row portlet-section-body">
+					<td class="table-cell align-left col-1 first valign-middle" colspan="1" headers="<portlet:namespace/>SearchContainer_col-result">&nbsp;</td>
+					<td class="table-cell align-left col-2 last valign-middle" colspan="1" headers="<portlet:namespace/>SearchContainer_col-title-link">
+					
+					<%
+					if (contentType.equals("rss-portlet-subscriptions") || 
+						permissionChecker.hasPermission(
+						scopeGroupId, contentLinks.getClassName(),
+						contentLinks.getClassPK(), "UPDATE")) {
+			
+						String editUrl = contentType.equals("rss-portlet-subscriptions") ? contentLinks.getContentEditLink() : 
+							"javascript:Liferay.Util.openWindow({id: '" + renderResponse.getNamespace() + "editAsset', " + 
+							"title: '" + LanguageUtil.format(pageContext, "edit-x", HtmlUtil.escape(contentLinks.getContentTitle())) + "', " + 
+							"uri:'" + HtmlUtil.escapeURL(contentLinks.getContentEditLink()) + "'});";
+					%>
+							<liferay-ui:icon
+								image="edit"
+								label="<%= true %>"
+								message="<%= contentLinks.getContentTitle() %>"
+								target='<%= contentType.equals("rss-portlet-subscriptions") ? "_blank" : null %>'
+								url="<%= editUrl %>"
+							/>
+					<%
+					} else {
+					%>
+							<%= HtmlUtil.escape(contentLinks.getContentTitle()) %>
+					<%
+					}
+					%>
+					</td>
+				</tr>
+				<%			
+			}
+			linkCounter++;
+			
+			
 			String linkShort = (link.length() > 150 ? link.substring(0, 150) + "..." : link);
 
 			if (link.startsWith("//")) {
@@ -282,7 +289,8 @@ for (ContentLinks contentLinks : contentLinksList) {
 					
 				}
 			}
-			%>
+			//if (scanLinks || (!scanLinks && link.equalsIgnoreCase(relativeNewUrl))) {
+				%>
 					<tr class="link-scanner-row-link results-row portlet-section-body">
 						<td class="table-cell align-left col-1 first valign-middle" colspan="1" headers="<portlet:namespace/>SearchContainer_col-result">
 							<div class="link-scanner-result link-scanner-unchecked" title="" data-link="<%= link %>" data-isportal="<%= new LinkScannerUtil().isPortalLink(link, themeDisplay) %>"></div>
@@ -291,7 +299,8 @@ for (ContentLinks contentLinks : contentLinksList) {
 							<a href="<%= link %>" target="_blank" class="link-scanner-link"><%= HtmlUtil.escape(linkShort) %></a>
 						</td>
 					</tr>
-			<%
+				<%
+			//}
 		}
 	}
 %>
